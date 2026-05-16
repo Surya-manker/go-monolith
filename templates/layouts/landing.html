@@ -1,0 +1,32 @@
+{{ define "landing" }}
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ block "title" . }}InvoBill — Inventory & Billing Platform{{ end }}</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+	<link rel="stylesheet" href="/static/css/app.css">
+	<script>
+		(function () {
+			var t = localStorage.getItem('theme');
+			if (t) document.documentElement.dataset.theme = t;
+		})();
+	</script>
+</head>
+<body class="landing-body">
+
+{{ block "content" . }}{{ end }}
+
+<script>
+	function toggleTheme() {
+		var next = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
+		document.documentElement.dataset.theme = next;
+		localStorage.setItem('theme', next);
+	}
+</script>
+</body>
+</html>
+{{ end }}

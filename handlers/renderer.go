@@ -37,6 +37,14 @@ func (r *Renderer) Auth(w http.ResponseWriter, page string, data any) {
 	)
 }
 
+// Landing renders the public landing page (no sidebar, no auth).
+func (r *Renderer) Landing(w http.ResponseWriter, page string, data any) {
+	r.execute(w, "landing", data,
+		filepath.Join(r.root, "layouts", "landing.html"),
+		filepath.Join(r.root, "pages", page),
+	)
+}
+
 // Partial renders an HTML fragment for an HTMX swap.
 func (r *Renderer) Partial(w http.ResponseWriter, partial string, data any) {
 	content, err := os.ReadFile(filepath.Join(r.root, "partials", partial))

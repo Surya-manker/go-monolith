@@ -13,6 +13,9 @@ func New(app *handlers.App) http.Handler {
 	// Static assets — no auth required.
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	// ── Public landing page ──────────────────────────────────────────────────
+	mux.HandleFunc("GET /{$}", app.Home)
+
 	// ── Auth routes (public, no CSRF needed) ────────────────────────────────
 	mux.HandleFunc("GET /login", app.LoginPage)
 	mux.HandleFunc("POST /login", app.LoginPost)
@@ -24,7 +27,6 @@ func New(app *handlers.App) http.Handler {
 	// ── Protected routes ────────────────────────────────────────────────────
 	authMux := http.NewServeMux()
 
-	authMux.HandleFunc("GET /", app.Dashboard)
 	authMux.HandleFunc("GET /dashboard", app.Dashboard)
 
 	authMux.HandleFunc("GET /products", app.ProductsIndex)
