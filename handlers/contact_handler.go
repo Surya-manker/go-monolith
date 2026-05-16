@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -34,7 +36,26 @@ func (a *App) ContactPost(w http.ResponseWriter, r *http.Request) {
 		a.Renderer.Landing(w, "contact.html", data)
 		return
 	}
-	// In production: send email via mailer. For now, log and show success.
+
+	// Always log to server console so messages are never lost.
+	log.Printf("[CONTACT] From: %s <%s> | Subject: %s | Message: %s",
+		data.Name, data.Email, data.Subject, data.Message)
+
+	// Send email to the admin address configured via CONTACT_EMAIL env var.
+	// Falls back to SMTP_FROM, then a hardcoded default.
+	adminEmail := os.Getenv("CONTACT_EMAIL")
+	if adminEmail == "" {
+		adminEmail = os.Getenv("SMTP_FROM")
+	}
+	if adminEmail == "" {
+		adminEmail = "admin@invobill.in"
+	}
+
+	if err := a.Mailer.SendContactMessage(adminEmail, data.Name, data.Email, data.Subject, data.Message); err != nil {
+		log.Printf("[CONTACT] email send failed: %v", err)
+		// Don't show error to user — message is already logged above.
+	}
+
 	data.Success = true
 	data.Name, data.Email, data.Subject, data.Message = "", "", "", ""
 	a.Renderer.Landing(w, "contact.html", data)

@@ -42,6 +42,7 @@ No test suite exists. Go version: **1.25**.
 | `SMTP_USER` | _(empty)_ | SMTP username |
 | `SMTP_PASS` | _(empty)_ | SMTP password |
 | `SMTP_FROM` | `noreply@invobill.in` | Sender address on outgoing emails |
+| `CONTACT_EMAIL` | value of `SMTP_FROM`, else `admin@invobill.in` | Inbox that receives contact form submissions |
 
 ## Architecture
 

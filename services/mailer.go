@@ -14,6 +14,7 @@ type Mailer interface {
 	SendInvoice(to, customerName, invoiceNumber string, amount float64, pdfURL string) error
 	SendWelcome(to, name string) error
 	SendPasswordReset(to, name, resetURL string) error
+	SendContactMessage(to, fromName, fromEmail, subject, message string) error
 }
 
 // NoopMailer silently discards all mail (default when SMTP is unconfigured).
@@ -22,8 +23,11 @@ type NoopMailer struct{}
 func (NoopMailer) SendInvoice(to, customerName, invoiceNumber string, amount float64, pdfURL string) error {
 	return nil
 }
-func (NoopMailer) SendWelcome(to, name string) error         { return nil }
-func (NoopMailer) SendPasswordReset(to, name, url string) error { return nil }
+func (NoopMailer) SendWelcome(to, name string) error                                     { return nil }
+func (NoopMailer) SendPasswordReset(to, name, url string) error                          { return nil }
+func (NoopMailer) SendContactMessage(to, fromName, fromEmail, subject, message string) error {
+	return nil
+}
 
 // SMTPMailer sends real email via SMTP.
 type SMTPMailer struct {
@@ -147,4 +151,27 @@ func (m *SMTPMailer) SendPasswordReset(to, name, resetURL string) error {
   </div>
 </div></body></html>`, name, resetURL)
 	return m.send(to, "Reset your InvoBill password", body)
+}
+
+func (m *SMTPMailer) SendContactMessage(to, fromName, fromEmail, subject, message string) error {
+	body := fmt.Sprintf(`<!DOCTYPE html><html><body style="font-family:Inter,sans-serif;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+  <div style="background:linear-gradient(135deg,#4338ca,#6366f1);padding:24px 32px">
+    <h2 style="color:#fff;margin:0;font-size:18px;font-weight:700">New Contact Message — InvoBill</h2>
+  </div>
+  <div style="padding:24px 32px">
+    <table style="width:100%%;border-collapse:collapse;font-size:14px">
+      <tr><td style="padding:8px 0;color:#6b7280;width:100px;font-weight:600">From</td><td style="padding:8px 0;color:#111827">%s</td></tr>
+      <tr><td style="padding:8px 0;color:#6b7280;font-weight:600">Email</td><td style="padding:8px 0"><a href="mailto:%s" style="color:#4f46e5">%s</a></td></tr>
+      <tr><td style="padding:8px 0;color:#6b7280;font-weight:600">Subject</td><td style="padding:8px 0;color:#111827">%s</td></tr>
+    </table>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-top:12px">
+      <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap">%s</p>
+    </div>
+    <p style="color:#9ca3af;font-size:11px;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px">
+      Sent via invobill.in contact form
+    </p>
+  </div>
+</div></body></html>`, fromName, fromEmail, fromEmail, subject, message)
+	return m.send(to, "Contact: "+subject+" (from "+fromName+")", body)
 }
