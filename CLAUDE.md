@@ -5,11 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```powershell
-# Run the server (PowerShell — set env vars first)
+# Run the server (PowerShell)
 $env:DATABASE_DSN = "root:@tcp(127.0.0.1:3306)/invobill?parseTime=true&charset=utf8mb4"
 go run main.go
 
-# Seed the database with demo data (admin + staff users + sample records)
+# Seed the database (admin + staff users + sample records; idempotent)
 go run ./seed/
 
 # Build binary
@@ -25,98 +25,94 @@ go mod tidy
 
 No test suite exists. Go version: **1.25**.
 
+**Database setup:** `CREATE DATABASE invobill CHARACTER SET utf8mb4;` — schema auto-migrates on every startup via each store's `Migrate()` method, called in dependency order in `main.go`.
+
 ## Environment Variables
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_DSN` | `root:@tcp(127.0.0.1:3306)/invobill?parseTime=true&charset=utf8mb4` | MySQL connection string — must include `parseTime=true` |
+| `DATABASE_DSN` | `root:@tcp(127.0.0.1:3306)/invobill?parseTime=true&charset=utf8mb4` | Must include `parseTime=true` |
 | `PORT` | `8080` | HTTP listen port |
-| `GST_SELLER_NAME` | `InvoBill Company` | Appears on generated PDF invoices |
-| `GST_SELLER_GSTIN` | _(empty)_ | Seller GSTIN — first 2 digits auto-set `GST_STATE_CODE` |
+| `GST_SELLER_NAME` | `InvoBill Company` | Appears on PDF invoices |
+| `GST_SELLER_GSTIN` | _(empty)_ | First 2 digits auto-set `GST_STATE_CODE` |
 | `GST_SELLER_ADDRESS` | _(empty)_ | Appears on PDF invoices |
-| `GST_STATE_CODE` | first 2 chars of GSTIN | Determines CGST+SGST vs IGST on PDFs |
-
-**Database setup:** Create the MySQL database before first run: `CREATE DATABASE invobill CHARACTER SET utf8mb4;`. Schema is auto-migrated on every startup via each store's `Migrate()` method.
+| `GST_STATE_CODE` | first 2 chars of GSTIN | Determines CGST+SGST vs IGST |
 
 ## Architecture
 
-**Stack:** Go stdlib `net/http` · MySQL (`go-sql-driver/mysql`) · `html/template` · HTMX · `go-pdf/fpdf` (PDF generation) · bcrypt (passwords)
+**Stack:** Go stdlib `net/http` · MySQL (`go-sql-driver/mysql`) · `html/template` · HTMX 2 · `go-pdf/fpdf`
 
 **Request flow:**
 ```
-HTTP → middleware chain → routes/routes.go → handlers/ → services/ → models/ → MySQL
+HTTP → Security → RateLimiter(60rps) → [Auth → CSRF →] routes/routes.go → handlers/ → services/ → models/ → MySQL
 ```
 
-**Middleware chain** (outermost first): `Security → RateLimiter(60rps) → Auth → CSRF → handler`
+### Route categories (`routes/routes.go`)
 
-- Auth routes (`/login`, `/register`, `/logout`) skip CSRF and Auth.
-- `/api/v1/*` routes skip CSRF but require Auth (session cookie).
-- Admin-only routes (`/admin/users/*`) additionally wrap with `middleware.RequireRole("admin", "super_admin")`.
+| Category | Auth | CSRF | Examples |
+|---|---|---|---|
+| Public pages | No | No | `GET /`, `/about`, `/contact`, `/generator` |
+| Auth pages | No | No | `/login`, `/register`, `/logout` |
+| Protected HTML | Yes | Yes | `/dashboard`, `/products`, all module routes |
+| REST API `/api/v1/*` | Yes (cookie) | No | JSON responses |
 
-### Layer responsibilities
+The catch-all `mux.Handle("/", authHandler)` routes everything not explicitly matched to the auth+CSRF-protected mux. Public pages must be registered **before** this catch-all on the outer `mux`.
 
-| Layer | Location | Notes |
+### Renderer (`handlers/renderer.go`)
+
+Three methods — choose based on layout needed:
+
+| Method | Layout template | Use for |
 |---|---|---|
-| Router | `routes/routes.go` | All routes in one file. Module routes registered via loop. |
-| Handlers | `handlers/` | Parse request → call service → render. Never write `c.JSON` directly. |
-| Services | `services/` | Business logic and validation. |
-| Models | `models/` | Raw SQL queries. Each store owns its `Migrate()`. |
-| Templates | `templates/` | `layouts/` (base shell) · `pages/` (full pages) · `partials/` (HTMX fragments) |
-| Seed | `seed/main.go` | Standalone binary — safe to re-run (idempotent). |
+| `Page(w, "page.html", data)` | `layouts/base.html` + sidebar | All authenticated app pages |
+| `Auth(w, "page.html", data)` | `layouts/auth.html` | Login / register |
+| `Landing(w, "page.html", data)` | `layouts/landing.html` | Public marketing pages |
+
+Templates are parsed from disk on every request — changes are live without restart. The `funcMap()` exposes `initial` (first letter of a string) and `hasPermission` (RBAC check) to all templates.
 
 ### Generic Module System
 
-Ten entities (customers, categories, vendors, invoices, purchase-orders, users, payments, credit-notes, jobs, accounts) are driven by a single generic engine:
+Ten entities are driven by a single engine with no per-module route or template code:
 
-- **Schema**: `models/business.go` — `ModuleStore` with shared `List`, `Get`, `Create`, `Update`, `Delete`, `Trash`, `Restore`, `HardDelete`.
-- **Config**: `services/module_service.go:NewModuleService()` — `[]ModuleConfig` slice defines each module's `Key`, `Table`, `Fields`, `Title`.
-- **Routes**: `routes/routes.go` — one loop registers all 5 HTML routes + 3 trash routes per module automatically.
+- **Schema**: `models/business.go` — `ModuleStore` implements `List`, `Get`, `Create`, `Update`, `Delete`, `Trash`, `Restore`, `HardDelete` for any table.
+- **Config**: `services/module_service.go:NewModuleService()` — a `[]ModuleConfig` slice defines each module's `Key`, `Table`, `Fields`, and `Title`.
+- **Routes**: `routes/routes.go` — one loop registers 5 HTML + 3 trash routes per module.
 - **Templates**: `templates/pages/crud.html` (full page) + `templates/partials/crud_table.html` (HTMX swap).
 
-**To add a new generic module:** add a `ModuleConfig` to the slice in `NewModuleService()` — no route or template changes needed.
+**To add a new generic module:** add a `ModuleConfig` entry to the slice in `NewModuleService()`. No other changes needed.
 
-**Products are NOT generic** — they have dedicated handlers (`handlers/product_handler.go`), service (`services/product_service.go`), and model (`models/product.go`) because they require stock management and richer types.
+**Products are NOT generic** — `handlers/product_handler.go`, `services/product_service.go`, and `models/product.go` exist separately because products require stock management, SKU, and threshold fields.
 
-### Renderer
+### Public Landing Pages
 
-`handlers/renderer.go` has three methods:
-- `Page(w, "page.html", data)` — full page: loads `layouts/base.html` + `partials/header.html` + `partials/footer.html` + `pages/<page>`
-- `Auth(w, "page.html", data)` — standalone: loads `layouts/auth.html` + `pages/<page>`
-- `Partial(w, "partial.html", data)` — HTMX fragment from `partials/<partial>`
+`/`, `/about`, `/contact`, `/generator` all use `Renderer.Landing()` and the `layouts/landing.html` layout. The layout includes the shared navbar (Home · About · Generator · Contact), mobile hamburger menu, multi-column footer, and all animation + theme JS. Page templates only define `{{ define "content" }}` — no nav/footer repetition.
 
-Templates are parsed from disk on every request (no caching) — template changes are live without restart.
+The `/generator` page is entirely client-side JavaScript — the Go handler just serves the template. It renders a live GST invoice preview and uses `window.print()` for PDF output.
+
+### Animation System
+
+`static/css/app.css` defines CSS keyframes and a scroll-triggered class system. Add `data-anim="up|fade|left|right|scale"` to any element in landing page templates. The `IntersectionObserver` in `landing.html` adds `.visible` when the element enters the viewport, triggering the transition. Inline `style="transition-delay:.Xs"` controls stagger timing.
 
 ### CSRF
 
-`middleware/csrf.go` validates POST/PUT/DELETE requests. Token is stored in a cookie (`csrf_token`). HTMX injects it automatically via the `htmx:configRequest` listener in `base.html`. **Regular HTML forms must use HTMX (`hx-post`) or include a hidden `_csrf` field** — plain `method="POST"` without HTMX will fail with 403.
-
-### Toast Notifications
-
-`handlers/crud_handler.go:setToast(w, message, type)` sets the `HX-Trigger` response header. The `showToast` JS listener in `base.html` catches it and renders the toast. **Call `setToast` before any write to `w`** (headers must be set before body).
-
-Types: `"success"` (green), `"error"` (red), `"warning"` (amber), `"info"` (blue).
+`middleware/csrf.go` validates POST/PUT/DELETE on all protected HTML routes. Token lives in the `csrf_token` cookie; HTMX injects it via the `htmx:configRequest` listener in `base.html`. Plain HTML `<form method="POST">` must include a hidden `_csrf` field — otherwise 403.
 
 ### RBAC
 
-`middleware/rbac.go` defines role permissions. Template function `hasPermission .User.Role "module" "action"` is available in all templates (registered in `renderer.go:funcMap()`).
+`middleware/rbac.go` maps roles to `module:action` pairs. Roles: `super_admin` / `admin` (all), `manager`, `accountant`, `staff`. The template function `hasPermission .User.Role "module" "action"` gates UI elements. Always use `middleware.UserFromContext(r.Context())` in handlers — never read identity from request body.
 
-Roles: `admin` / `super_admin` (full access) · `manager` · `accountant` · `staff` (most restricted).
+### Toast Notifications
 
-The sidebar in `templates/partials/header.html` conditionally shows links using `{{ if hasPermission .User.Role "module" "view" }}`.
+`handlers/crud_handler.go:setToast(w, message, type)` sets `HX-Trigger` before any body write. JS in `base.html` fires `showToast`. Types: `"success"`, `"error"`, `"warning"`, `"info"`.
 
 ### PDF Invoice Generation
 
-`services/pdf_service.go:GenerateInvoicePDF(InvoiceForPDF)` uses `go-pdf/fpdf`. **All strings passed to fpdf must be ASCII/Latin-1** — the built-in Helvetica font does not support Unicode. Use `Rs.` not `₹`, `-` not `—`.
+`services/pdf_service.go:GenerateInvoicePDF()` uses `go-pdf/fpdf`. **All strings must be ASCII/Latin-1** — use `Rs.` not `₹`, `-` not `—`. Handler at `GET /invoices/pdf?id=X` determines CGST+SGST vs IGST by comparing buyer GSTIN prefix against `App.StateCode`.
 
-Handler: `handlers/invoice_pdf_handler.go` at `GET /invoices/pdf?id=X`. Looks up the invoice, finds the matching customer by name, determines CGST+SGST vs IGST by comparing the buyer's GSTIN prefix against `App.StateCode`.
+### Real-time Dashboard
+
+`GET /sse/dashboard` streams Server-Sent Events. The dashboard template connects via `hx-ext="sse"` and swaps named SSE events into specific DOM elements (`#sse-products`, `#sse-invoices`, etc.).
 
 ### Auto Status Badges
 
-JavaScript in `base.html` scans every `<td>` after page load and HTMX swaps. If the cell's text matches a known status word (paid, pending, overdue, draft, active, inactive, etc.) it wraps it in a `<span class="badge badge--{status}">`. No server-side template change needed for new status words — just add a mapping to `STATUS_MAP` in `base.html`.
-
-### Auth / Sessions
-
-- Sessions stored in MySQL `sessions` table. Session token: 64-char hex (32 random bytes).
-- `middleware/auth.go:UserFromContext(ctx)` retrieves the authenticated user from request context.
-- In handlers, always use `middleware.UserFromContext(r.Context())` — never read identity from the request body.
-- Admin can reset any user's password without knowing the old one via `POST /admin/users/update`.
+JS in `base.html` scans every `<td>` after load and HTMX swaps. If the cell text matches a word in `STATUS_MAP` (paid, pending, overdue, draft, active, etc.), it wraps it in `<span class="badge badge--{status}">`. To support a new status word, add it to `STATUS_MAP` in `base.html` only.
