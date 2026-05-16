@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	"go-monolith/handlers"
 	"go-monolith/models"
@@ -16,6 +17,10 @@ import (
 )
 
 func main() {
+	// Load app.env if it exists — silently ignored if missing.
+	if err := godotenv.Load("app.env"); err == nil {
+		log.Println("loaded config from app.env")
+	}
 	dsn := os.Getenv("DATABASE_DSN")
 	if dsn == "" {
 		dsn = "root:@tcp(127.0.0.1:3306)/invobill?parseTime=true&charset=utf8mb4"
