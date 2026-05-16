@@ -1,0 +1,26 @@
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+tmp/
+bin/
+
+# Environment
+app.env
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data / generated files
+data/assets/

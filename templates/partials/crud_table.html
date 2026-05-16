@@ -1,0 +1,87 @@
+{{ define "crud-table" }}
+{{ if .Error }}<div class="alert">{{ .Error }}</div>{{ end }}
+<table>
+	<thead>
+		<tr>
+			{{ $p := .Pagination }}
+			{{ range .Config.Columns }}
+				{{- $col := .Name -}}
+				{{- $dir := "asc" -}}
+				{{- if and (eq $p.Sort $col) (eq $p.Dir "asc") }}{{- $dir = "desc" -}}{{ end }}
+				<th>
+					<a style="display:inline-flex;gap:4px;align-items:center;color:inherit"
+						hx-get="{{ $.Config.Path }}?sort={{ $col }}&dir={{ $dir }}&search={{ $p.Search }}&page={{ $p.Page }}"
+						hx-target="#crud-table" hx-swap="innerHTML" hx-push-url="false">
+						{{ .Label }}
+						{{ if eq $p.Sort $col }}{{ if eq $p.Dir "asc" }}↑{{ else }}↓{{ end }}{{ end }}
+					</a>
+				</th>
+			{{ end }}
+			<th>Created</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Records }}
+			{{- $id  := index . "id" -}}
+			{{- $cat := index . "created_at" -}}
+			{{ $row := . }}
+			<tr>
+				{{ range $.Config.Columns }}<td>{{ index $row .Name }}</td>{{ end }}
+				<td>{{ $cat }}</td>
+				<td class="actions">
+					{{ if eq $.Config.Key "invoices" }}
+					<a class="link-button" href="/invoices/pdf?id={{ $id }}" target="_blank">PDF</a>
+					{{ end }}
+					<button class="link-button"
+						hx-get="{{ $.Config.Path }}/edit?id={{ $id }}"
+						hx-target="#crud-form" hx-swap="innerHTML">Edit</button>
+					<button class="link-button danger"
+						hx-post="{{ $.Config.Path }}/delete?id={{ $id }}"
+						hx-target="#crud-table" hx-swap="innerHTML"
+						hx-confirm="Move to trash?">Delete</button>
+				</td>
+			</tr>
+		{{ else }}
+			<tr><td colspan="10" class="empty">No records found.</td></tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ template "pagination" . }}
+{{ end }}
+
+{{ define "pagination" }}
+{{ $p := .Pagination }}
+{{ if gt $p.LastPage 1 }}
+<div class="pagination">
+	{{ if $p.HasPrev }}
+	<button class="button button--muted"
+		hx-get="{{ .Config.Path }}?page={{ $p.Prev }}&search={{ $p.Search }}&sort={{ $p.Sort }}&dir={{ $p.Dir }}"
+		hx-target="#crud-table" hx-swap="innerHTML">← Prev</button>
+	{{ end }}
+	<span class="pagination-info">Page {{ $p.Page }} of {{ $p.LastPage }}</span>
+	{{ if $p.HasNext }}
+	<button class="button button--muted"
+		hx-get="{{ .Config.Path }}?page={{ $p.Next }}&search={{ $p.Search }}&sort={{ $p.Sort }}&dir={{ $p.Dir }}"
+		hx-target="#crud-table" hx-swap="innerHTML">Next →</button>
+	{{ end }}
+</div>
+{{ end }}
+{{ end }}
+
+{{ template "crud-table" . }}
+
+{{/* OOB: reset the create form after every table swap (clears any open edit form) */}}
+<div id="crud-form" hx-swap-oob="true">
+	<form class="grid-form" hx-post="{{ .Config.Path }}" hx-target="#crud-table" hx-swap="innerHTML">
+		{{ range .Config.Fields }}
+			<label>
+				<span>{{ .Label }}</span>
+				<input name="{{ .Name }}" type="{{ .Type }}" value=""
+					{{ if eq .Name "name" }}required{{ end }}
+					{{ if eq .Name "number" }}required{{ end }}>
+			</label>
+		{{ end }}
+		<button class="button" type="submit">Save</button>
+	</form>
+</div>

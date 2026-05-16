@@ -1,0 +1,63 @@
+{{ define "products-table" }}
+{{ if .Error }}<div class="alert">{{ .Error }}</div>{{ end }}
+<table>
+	<thead>
+		<tr>
+			<th>Name</th><th>SKU</th><th>Price</th><th>Cost</th>
+			<th>Stock</th><th>Tax</th><th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Products }}
+			<tr>
+				<td>
+					<strong>{{ .Name }}</strong>
+					{{ if .Description }}<p class="cell-note">{{ .Description }}</p>{{ end }}
+				</td>
+				<td><span class="mono">{{ .SKU }}</span></td>
+				<td>{{ .Price }}</td>
+				<td>{{ .CostPrice }}</td>
+				<td>
+					{{ if .IsLowStock }}
+						<span class="badge badge--danger">{{ .Stock }}</span>
+					{{ else }}
+						<span class="badge badge--success">{{ .Stock }}</span>
+					{{ end }}
+				</td>
+				<td>{{ .TaxRate }}%</td>
+				<td class="actions">
+					<button class="link-button"
+						hx-get="/products/stock?id={{ .ID }}"
+						hx-target="#product-form" hx-swap="innerHTML">Stock</button>
+					<button class="link-button"
+						hx-get="/products/edit?id={{ .ID }}"
+						hx-target="#product-form" hx-swap="innerHTML">Edit</button>
+					<button class="link-button danger"
+						hx-post="/products/delete?id={{ .ID }}"
+						hx-target="#products-table" hx-swap="innerHTML"
+						hx-confirm="Delete this product?">Delete</button>
+				</td>
+			</tr>
+		{{ else }}
+			<tr><td colspan="7" class="empty">No products found.</td></tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ end }}
+
+{{ template "products-table" . }}
+
+{{/* OOB: reset product-form to the add form after every table refresh */}}
+<div id="product-form" hx-swap-oob="true">
+<form class="grid-form" hx-post="/products" hx-target="#products-table" hx-swap="innerHTML">
+	<label><span>Name *</span><input type="text" name="name" required placeholder="USB-C Cable"></label>
+	<label><span>SKU *</span><input type="text" name="sku" required placeholder="PROD-001"></label>
+	<label><span>Price *</span><input name="price" type="number" step="0.01" min="0.01" required placeholder="0.00"></label>
+	<label><span>Cost</span><input name="cost_price" type="number" step="0.01" min="0" placeholder="0.00"></label>
+	<label><span>Initial Stock</span><input name="stock" type="number" min="0" placeholder="0"></label>
+	<label><span>Tax %</span><input name="tax_rate" type="number" step="0.01" min="0" placeholder="0"></label>
+	<label><span>Low Stock Alert</span><input name="low_stock_threshold" type="number" min="1" value="10"></label>
+	<label class="wide"><span>Description</span><input type="text" name="description" placeholder="Optional description"></label>
+	<button class="button" type="submit">Add Product</button>
+</form>
+</div>

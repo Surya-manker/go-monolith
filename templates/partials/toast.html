@@ -1,0 +1,9 @@
+{{ define "toast" }}
+{{- if .Toast }}
+<div id="toast-container" hx-swap-oob="true">
+	<div class="toast toast--{{ .Toast.Type }}" role="alert">
+		{{ .Toast.Message }}
+	</div>
+</div>
+{{- end }}
+{{ end }}

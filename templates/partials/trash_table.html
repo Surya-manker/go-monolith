@@ -1,0 +1,35 @@
+{{ define "trash-table" }}
+<table>
+	<thead>
+		<tr>
+			{{ range .Config.Columns }}<th>{{ .Label }}</th>{{ end }}
+			<th>Deleted</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Records }}
+			{{- $id  := index . "id" -}}
+			{{- $cat := index . "created_at" -}}
+			{{ $row := . }}
+			<tr>
+				{{ range $.Config.Columns }}<td>{{ index $row .Name }}</td>{{ end }}
+				<td>{{ $cat }}</td>
+				<td class="actions">
+					<button class="link-button"
+						hx-post="{{ $.Config.Path }}/restore?id={{ $id }}"
+						hx-target="#trash-table" hx-swap="innerHTML">Restore</button>
+					<button class="link-button danger"
+						hx-post="{{ $.Config.Path }}/purge?id={{ $id }}"
+						hx-target="#trash-table" hx-swap="innerHTML"
+						hx-confirm="Permanently delete? This cannot be undone.">Purge</button>
+				</td>
+			</tr>
+		{{ else }}
+			<tr><td colspan="10" class="empty">Trash is empty.</td></tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ end }}
+
+{{ template "trash-table" . }}

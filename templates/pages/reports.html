@@ -1,0 +1,75 @@
+{{ define "title" }}Reports{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Reports</h1>
+		<p class="muted">Revenue, purchase value, and module summary.</p>
+	</div>
+</section>
+
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Invoice Revenue</span>
+		<strong>{{ index .Totals "invoice_total" }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Purchase Value</span>
+		<strong>{{ index .Totals "po_total" }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Customers</span>
+		<strong>{{ index .Counts "customers" }}</strong>
+	</article>
+</section>
+
+<section class="panel">
+	<table>
+		<thead>
+			<tr>
+				<th>Module</th>
+				<th>Total Records</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Categories</td>
+				<td>{{ index .Counts "categories" }}</td>
+			</tr>
+			<tr>
+				<td>Vendors</td>
+				<td>{{ index .Counts "vendors" }}</td>
+			</tr>
+			<tr>
+				<td>Invoices</td>
+				<td>{{ index .Counts "invoices" }}</td>
+			</tr>
+			<tr>
+				<td>Purchase Orders</td>
+				<td>{{ index .Counts "purchase-orders" }}</td>
+			</tr>
+			<tr>
+				<td>Payments</td>
+				<td>{{ index .Counts "payments" }}</td>
+			</tr>
+			<tr>
+				<td>Credit Notes</td>
+				<td>{{ index .Counts "credit-notes" }}</td>
+			</tr>
+			<tr>
+				<td>Users</td>
+				<td>{{ index .Counts "users" }}</td>
+			</tr>
+			<tr>
+				<td>Jobs</td>
+				<td>{{ index .Counts "jobs" }}</td>
+			</tr>
+			<tr>
+				<td>Accounting</td>
+				<td>{{ index .Counts "accounts" }}</td>
+			</tr>
+		</tbody>
+	</table>
+</section>
+{{ end }}

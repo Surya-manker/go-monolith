@@ -1,0 +1,181 @@
+{{ define "base" }}
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ block "title" . }}InvoBill{{ end }} — InvoBill</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+	<link rel="stylesheet" href="/static/css/app.css">
+	<script>
+		(function () {
+			var t = localStorage.getItem('theme');
+			if (t) document.documentElement.dataset.theme = t;
+		})();
+	</script>
+</head>
+<body>
+
+{{ template "header" . }}
+
+<div class="app">
+	<main class="content">
+		{{ block "content" . }}{{ end }}
+	</main>
+</div>
+
+{{ template "footer" . }}
+<div id="toast-container" aria-live="polite"></div>
+<div id="notif-panel" class="notif-panel-wrap" style="display:none"></div>
+
+<!-- Global Search Modal -->
+<dialog id="search-modal" class="search-modal">
+	<div class="search-modal-inner">
+		<div class="search-input-wrap">
+			<svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+			<input id="search-input" type="search" placeholder="Search across all modules…"
+				autocomplete="off"
+				hx-get="/search" hx-target="#search-results"
+				hx-swap="innerHTML" hx-trigger="input delay:250ms" name="q">
+			<kbd class="search-esc" onclick="closeSearch()">ESC</kbd>
+		</div>
+		<div id="search-results" class="search-results-pane">
+			<div class="search-empty">Start typing to search…</div>
+		</div>
+	</div>
+</dialog>
+
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+<script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+<script>
+	// ── CSRF injection for every HTMX request ──────────────────────
+	document.addEventListener('htmx:configRequest', function (evt) {
+		var m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+		if (m) evt.detail.headers['X-CSRF-Token'] = decodeURIComponent(m[1]);
+	});
+
+	// ── Dark-mode toggle ───────────────────────────────────────────
+	function toggleTheme() {
+		var next = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
+		document.documentElement.dataset.theme = next;
+		localStorage.setItem('theme', next);
+	}
+
+	// ── Sidebar ────────────────────────────────────────────────────
+	function openSidebar() {
+		document.getElementById('sidebar').classList.add('sidebar--open');
+		document.getElementById('sidebar-backdrop').classList.add('sidebar-backdrop--visible');
+		document.body.classList.add('sidebar-is-open');
+	}
+	function closeSidebar() {
+		document.getElementById('sidebar').classList.remove('sidebar--open');
+		document.getElementById('sidebar-backdrop').classList.remove('sidebar-backdrop--visible');
+		document.body.classList.remove('sidebar-is-open');
+	}
+
+	// ── Notification panel ─────────────────────────────────────────
+	function toggleNotifPanel() {
+		var p = document.getElementById('notif-panel');
+		p.style.display = p.style.display === 'none' ? 'block' : 'none';
+	}
+	document.addEventListener('click', function (e) {
+		var p = document.getElementById('notif-panel');
+		if (p && !p.contains(e.target) && !e.target.closest('.sidebar-icon-btn')) {
+			p.style.display = 'none';
+		}
+	});
+
+	// ── Global search (Ctrl+K) ─────────────────────────────────────
+	function openSearch() {
+		document.getElementById('search-modal').showModal();
+		setTimeout(function(){ document.getElementById('search-input').focus(); }, 50);
+	}
+	function closeSearch() {
+		document.getElementById('search-modal').close();
+		document.getElementById('search-input').value = '';
+		document.getElementById('search-results').innerHTML = '<div class="search-empty">Start typing to search…</div>';
+	}
+	document.addEventListener('keydown', function (e) {
+		if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+		if (e.key === 'Escape') { closeSearch(); }
+	});
+	document.getElementById('search-modal').addEventListener('click', function (e) {
+		if (e.target === this) closeSearch();
+	});
+
+	// ── Toast notifications ────────────────────────────────────────
+	var TOAST_ICONS = {
+		success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+		error:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+		warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+		info:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+	};
+
+	function showToast(message, type) {
+		type = type || 'success';
+		var container = document.getElementById('toast-container');
+		if (!container) return;
+
+		var toast = document.createElement('div');
+		toast.className = 'toast toast--' + type;
+		toast.innerHTML =
+			'<span class="toast-icon">' + (TOAST_ICONS[type] || TOAST_ICONS.info) + '</span>' +
+			'<span class="toast-msg">' + message.replace(/</g,'&lt;') + '</span>' +
+			'<button class="toast-close" onclick="this.parentNode.remove()" aria-label="Close">&#10005;</button>';
+
+		container.appendChild(toast);
+
+		// Force reflow then trigger enter animation
+		void toast.offsetWidth;
+		toast.classList.add('toast--in');
+
+		// Auto-dismiss
+		setTimeout(function() {
+			toast.classList.remove('toast--in');
+			toast.classList.add('toast--out');
+			setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+		}, 3500);
+	}
+
+	document.addEventListener('showToast', function(e) {
+		showToast(e.detail.message, e.detail.type);
+	});
+
+	// ── Auto status badges ─────────────────────────────────────────
+	var STATUS_MAP = {
+		'paid':'paid','pending':'pending','overdue':'overdue','draft':'draft',
+		'active':'active','inactive':'inactive','queued':'queued',
+		'completed':'completed','failed':'failed','issued':'issued',
+		'received':'received','processing':'pending','cancelled':'overdue',
+	};
+	var ROLE_MAP = { 'admin':'admin','manager':'manager','staff':'staff','accountant':'accountant','super_admin':'admin' };
+
+	function applyBadges(root) {
+		(root || document).querySelectorAll('td').forEach(function(td) {
+			if (td.querySelector('.badge') || td.classList.contains('actions')) return;
+			var txt = td.textContent.trim().toLowerCase();
+			var cls = STATUS_MAP[txt] || ROLE_MAP[txt];
+			if (cls) td.innerHTML = '<span class="badge badge--' + cls + '">' + td.textContent.trim() + '</span>';
+		});
+	}
+	document.addEventListener('DOMContentLoaded', function() { applyBadges(); });
+	document.addEventListener('htmx:afterSwap', function(e) { applyBadges(e.detail.target); });
+
+	// ── Active sidebar link ────────────────────────────────────────
+	document.addEventListener('DOMContentLoaded', function () {
+		var path = location.pathname;
+		document.querySelectorAll('.sidebar-link').forEach(function (a) {
+			var href = a.getAttribute('href');
+			if (!href) return;
+			var active = href === path ||
+				(href !== '/' && href !== '/dashboard' && path.startsWith(href)) ||
+				(href === '/dashboard' && (path === '/' || path === '/dashboard'));
+			if (active) a.classList.add('sidebar-link--active');
+		});
+	});
+</script>
+</body>
+</html>
+{{ end }}

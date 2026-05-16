@@ -1,0 +1,21 @@
+{{ define "search-results" }}
+{{ if .Results }}
+<ul class="search-list">
+	{{ range .Results }}
+	<li>
+		<a class="search-item" href="{{ .Path }}">
+			<span class="search-badge">{{ .Module }}</span>
+			<div class="search-item-body">
+				<strong>{{ .Title }}</strong>
+				{{ if .Sub }}<span class="muted">{{ .Sub }}</span>{{ end }}
+			</div>
+		</a>
+	</li>
+	{{ end }}
+</ul>
+{{ else }}
+<div class="search-empty">No results for <strong>{{ .Query }}</strong></div>
+{{ end }}
+{{ end }}
+
+{{ template "search-results" . }}

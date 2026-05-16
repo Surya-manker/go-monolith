@@ -1,0 +1,30 @@
+{{ define "title" }}Create Account — InvoBill{{ end }}
+
+{{ define "content" }}
+<h2 class="auth-heading">Create your account</h2>
+<p class="auth-sub">Get started with InvoBill today.</p>
+
+{{ if .Error }}
+<div class="alert">{{ .Error }}</div>
+{{ end }}
+
+<form method="POST" action="/register" class="auth-form">
+	<label>
+		<span>Full name</span>
+		<input type="text" name="name" required autofocus placeholder="Jane Doe">
+	</label>
+	<label>
+		<span>Email address</span>
+		<input type="email" name="email" required placeholder="you@example.com">
+	</label>
+	<label>
+		<span>Password <small class="muted">(min. 8 characters)</small></span>
+		<input type="password" name="password" required minlength="8" placeholder="••••••••">
+	</label>
+	<button class="button button--full" type="submit">Create account</button>
+</form>
+
+<p class="auth-footer">
+	Already have an account? <a href="/login">Sign in</a>
+</p>
+{{ end }}

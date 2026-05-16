@@ -1,0 +1,7 @@
+{{ define "notif-badge" }}
+{{ if gt .Count 0 }}
+<span class="notif-badge">{{ .Count }}</span>
+{{ end }}
+{{ end }}
+
+{{ template "notif-badge" . }}

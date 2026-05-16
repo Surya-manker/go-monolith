@@ -1,0 +1,23 @@
+{{ define "notifications-panel" }}
+<div class="notif-panel">
+	<div class="notif-header">
+		<strong>Notifications</strong>
+		<span class="muted" style="font-size:12px">{{ len .Notifications }} total</span>
+	</div>
+	{{ range .Notifications }}
+	<div class="notif-item{{ if not .Read }} notif-item--unread{{ end }}">
+		<span class="notif-dot notif-dot--{{ .Type }}"></span>
+		<div class="notif-body">
+			<p>{{ .Message }}</p>
+			<span class="muted" style="font-size:11px">{{ .CreatedAt }}
+				{{ if .Module }}· {{ .Module }}{{ end }}
+			</span>
+		</div>
+	</div>
+	{{ else }}
+	<div class="empty">No notifications yet</div>
+	{{ end }}
+</div>
+{{ end }}
+
+{{ template "notifications-panel" . }}

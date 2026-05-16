@@ -1,0 +1,32 @@
+{{ define "auth" }}
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ block "title" . }}InvoBill{{ end }}</title>
+	<link rel="stylesheet" href="/static/css/app.css">
+	<script>
+		// Apply saved theme before first paint to prevent flash.
+		(function () {
+			var t = localStorage.getItem('theme');
+			if (t) document.documentElement.dataset.theme = t;
+		})();
+	</script>
+</head>
+<body class="auth-body">
+	<div class="auth-wrap">
+		<div class="auth-card">
+			<div class="auth-brand">
+				<div class="sidebar-logo-mark">IB</div>
+				<div>
+					<span class="brand">InvoBill</span>
+					<p>Inventory & Billing Platform</p>
+				</div>
+			</div>
+			{{ block "content" . }}{{ end }}
+		</div>
+	</div>
+</body>
+</html>
+{{ end }}

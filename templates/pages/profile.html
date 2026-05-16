@@ -1,0 +1,86 @@
+{{ define "title" }}Profile{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Account</p>
+		<h1>My Profile</h1>
+		<p class="muted">Update your name and password.</p>
+	</div>
+</section>
+
+{{ if .Error }}
+<div class="alert" style="max-width:1280px;margin:0 auto 16px">{{ .Error }}</div>
+{{ end }}
+{{ if .Success }}
+<div class="alert alert--success" style="max-width:1280px;margin:0 auto 16px">{{ .Success }}</div>
+{{ end }}
+
+<div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+	<section class="panel" style="margin:0">
+		<h2 style="margin-bottom:18px">Account Details</h2>
+		{{ if .User }}
+		<form class="grid-form" style="grid-template-columns:1fr"
+			hx-post="/profile" hx-target="body" hx-swap="innerHTML">
+			<label>
+				<span>Full Name</span>
+				<input name="name" type="text" value="{{ .User.Name }}" required>
+			</label>
+			<label>
+				<span>Email</span>
+				<input type="email" value="{{ .User.Email }}" disabled style="opacity:.6">
+			</label>
+			<label>
+				<span>Role</span>
+				<input type="text" value="{{ .User.Role }}" disabled style="opacity:.6">
+			</label>
+			<label>
+				<span>Current Password <small class="muted">(required to change password)</small></span>
+				<input name="current_password" type="password" placeholder="Enter to change password">
+			</label>
+			<label>
+				<span>New Password <small class="muted">(leave blank to keep current)</small></span>
+				<input name="new_password" type="password" placeholder="Min. 8 characters" minlength="8">
+			</label>
+			<button class="button" type="submit">Save Changes</button>
+		</form>
+		{{ end }}
+	</section>
+
+	<section class="panel" style="margin:0">
+		<h2 style="margin-bottom:18px">Session Info</h2>
+		{{ if .User }}
+		<div class="stack">
+			<div class="stock-row">
+				<span style="color:var(--muted)">User ID</span>
+				<span class="mono">{{ .User.ID }}</span>
+			</div>
+			<div class="stock-row">
+				<span style="color:var(--muted)">Name</span>
+				<strong>{{ .User.Name }}</strong>
+			</div>
+			<div class="stock-row">
+				<span style="color:var(--muted)">Email</span>
+				<span>{{ .User.Email }}</span>
+			</div>
+			<div class="stock-row">
+				<span style="color:var(--muted)">Role</span>
+				<span class="badge badge--role" style="background:var(--brand-50);color:var(--brand-600)">{{ .User.Role }}</span>
+			</div>
+			{{ if .User.LastLogin }}
+			<div class="stock-row">
+				<span style="color:var(--muted)">Last Login</span>
+				<span>{{ .User.LastLogin }}</span>
+			</div>
+			{{ end }}
+			<div class="stock-row">
+				<span style="color:var(--muted)">Account Created</span>
+				<span>{{ .User.CreatedAt }}</span>
+			</div>
+		</div>
+		{{ end }}
+	</section>
+
+</div>
+{{ end }}

@@ -1,0 +1,18 @@
+{{ define "title" }}{{ .Title }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Module</p>
+		<h1>{{ .Title }}</h1>
+		<p class="muted">{{ .Description }}</p>
+	</div>
+</section>
+
+<section class="panel">
+	<div class="empty">
+		This module route is wired into the monolith shell. Move the existing backend service logic here next, then add HTMX
+		forms and table partials following the Products module pattern.
+	</div>
+</section>
+{{ end }}

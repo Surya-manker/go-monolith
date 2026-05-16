@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  invobill:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - invobill_data:/app/data
+    environment:
+      PORT: "8080"
+    restart: unless-stopped
+
+volumes:
+  invobill_data:

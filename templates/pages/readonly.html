@@ -1,0 +1,29 @@
+{{ define "title" }}{{ .Config.Title }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Audit</p>
+		<h1>{{ .Config.Title }}</h1>
+		<p class="muted">{{ .Config.Description }}</p>
+	</div>
+</section>
+
+<section class="panel">
+	<table>
+		<thead>
+			<tr>{{ range .Config.Columns }}<th>{{ .Label }}</th>{{ end }}</tr>
+		</thead>
+		<tbody>
+			{{ range .Records }}
+				{{ $row := . }}
+				<tr>{{ range $.Config.Columns }}<td>{{ index $row .Name }}</td>{{ end }}</tr>
+			{{ else }}
+				<tr>
+					<td colspan="8" class="empty">No stock movements yet.</td>
+				</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}

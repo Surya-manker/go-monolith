@@ -1,0 +1,30 @@
+{{ define "stock-form" }}
+{{ if .Stock }}
+	<form class="grid-form" hx-post="/products/stock?id={{ .Stock.ID }}" hx-target="#products-table" hx-swap="innerHTML">
+		<div class="form-summary wide">
+			<span>{{ .Stock.Name }}</span>
+			<strong>Current stock: {{ .Stock.Stock }}</strong>
+		</div>
+		<label>
+			<span>Quantity Change *</span>
+			<input name="quantity_change" type="number" required placeholder="10 or -5">
+		</label>
+		<label>
+			<span>Change Type *</span>
+			<select name="change_type" required>
+				<option value="purchase">Purchase</option>
+				<option value="adjustment">Adjustment</option>
+				<option value="return">Return</option>
+			</select>
+		</label>
+		<label class="wide">
+			<span>Note</span>
+			<input type="text" name="note" placeholder="Optional note">
+		</label>
+		<button class="button" type="submit">Update Stock</button>
+		<a class="button button--muted" href="/products">Cancel</a>
+	</form>
+{{ end }}
+{{ end }}
+
+{{ template "stock-form" . }}

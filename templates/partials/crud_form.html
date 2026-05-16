@@ -1,0 +1,20 @@
+{{ define "crud-form" }}
+{{- $id := index .Edit "id" -}}
+<form class="grid-form"
+	hx-post="{{ .Config.Path }}/update?id={{ $id }}"
+	hx-target="#crud-table"
+	hx-swap="innerHTML">
+	{{ range .Config.Fields }}
+		<label>
+			<span>{{ .Label }}</span>
+			<input name="{{ .Name }}" type="{{ .Type }}" value="{{ .Value }}"
+				{{ if eq .Name "name" }}required{{ end }}
+				{{ if eq .Name "number" }}required{{ end }}>
+		</label>
+	{{ end }}
+	<button class="button" type="submit">Update</button>
+	<a class="button button--muted" href="{{ .Config.Path }}">Cancel</a>
+</form>
+{{ end }}
+
+{{ template "crud-form" . }}

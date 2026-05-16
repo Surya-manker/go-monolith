@@ -1,0 +1,131 @@
+{{ define "title" }}Dashboard{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Overview</p>
+		<h1>Dashboard</h1>
+		<p class="muted">Welcome back{{ if .User }}, {{ .User.Name }}{{ end }}. Here's your business snapshot.</p>
+	</div>
+	<a class="button" href="/products">Manage Products</a>
+</section>
+
+{{/* SSE live update container */}}
+<div hx-ext="sse" sse-connect="/sse/dashboard" sse-swap="dashboard" style="display:none"></div>
+
+{{/* ── Row 1: Key metrics ── */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total Products</span>
+		<strong><span id="sse-products">{{ .ProductCount }}</span></strong>
+		<p class="muted" style="margin-top:4px"><span id="sse-lowstock">{{ .LowStockCount }}</span> low stock</p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Invoice Revenue</span>
+		<strong style="font-size:22px"><span id="sse-invoice-total">{{ .InvoiceTotal }}</span></strong>
+		<p class="muted" style="margin-top:4px"><span id="sse-invoices">{{ index .Counts "invoices" }}</span> invoices total</p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Pending Invoices</span>
+		<strong style="font-size:22px;color:var(--red-text)"><span id="sse-pending">{{ .PendingInvoiceTotal }}</span></strong>
+		<p class="muted" style="margin-top:4px">Unpaid balance</p>
+	</article>
+</section>
+
+{{/* ── Row 2: More counts ── */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Customers</span>
+		<strong><span id="sse-customers">{{ index .Counts "customers" }}</span></strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Vendors</span>
+		<strong>{{ index .Counts "vendors" }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Purchase Orders</span>
+		<strong>{{ index .Counts "purchase-orders" }}</strong>
+		<p class="muted" style="margin-top:4px">Value: {{ .PurchaseTotal }}</p>
+	</article>
+</section>
+
+{{/* ── Row 3: Low stock + Top customers + Activity ── */}}
+<div class="dash-3col" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:1280px;margin:0 auto 18px">
+
+	{{/* Low stock alerts */}}
+	<section class="panel" style="margin:0">
+		<div class="section-head">
+			<div>
+				<h2>⚠ Low Stock</h2>
+				<p class="muted">At or below threshold</p>
+			</div>
+			<a class="text-link" href="/products">View all</a>
+		</div>
+		<div class="stack">
+			{{ range .LowStockItems }}
+				<div class="stock-row">
+					<div>
+						<strong>{{ .Name }}</strong>
+						<span>{{ .SKU }}</span>
+					</div>
+					<span class="badge badge--danger">{{ .Stock }} left</span>
+				</div>
+			{{ else }}
+				<div class="empty">✅ All products well stocked</div>
+			{{ end }}
+		</div>
+	</section>
+
+	{{/* Top customers */}}
+	<section class="panel" style="margin:0">
+		<div class="section-head">
+			<div>
+				<h2>🏆 Top Customers</h2>
+				<p class="muted">By invoice value</p>
+			</div>
+			<a class="text-link" href="/customers">View all</a>
+		</div>
+		<div class="stack">
+			{{ range .TopCustomers }}
+				<div class="stock-row">
+					<div>
+						<strong>{{ .customer }}</strong>
+						<span>{{ .invoice_count }} invoices</span>
+					</div>
+					<span style="font-size:13px;font-weight:700;color:var(--brand-600)">{{ .total_value }}</span>
+				</div>
+			{{ else }}
+				<div class="empty">No invoice data yet</div>
+			{{ end }}
+		</div>
+	</section>
+
+	{{/* Recent activity */}}
+	<section class="panel" style="margin:0">
+		<div class="section-head">
+			<div>
+				<h2>🕐 Recent Activity</h2>
+				<p class="muted">Latest changes</p>
+			</div>
+			<a class="text-link" href="/audit-logs">View all</a>
+		</div>
+		<div class="stack">
+			{{ range .RecentActivity }}
+				<div class="activity-item">
+					<div class="activity-dot activity-dot--{{ .action }}"></div>
+					<div style="min-width:0">
+						<p style="margin:0;font-size:13px;font-weight:600;text-transform:capitalize">
+							{{ .action }} {{ .module }}
+							{{ if .record_id }}<span class="mono">#{{ .record_id }}</span>{{ end }}
+						</p>
+						<p class="muted" style="margin:2px 0 0;font-size:11px">{{ .user_name }} · {{ .created_at }}</p>
+					</div>
+				</div>
+			{{ else }}
+				<div class="empty">No activity yet</div>
+			{{ end }}
+		</div>
+	</section>
+
+</div>
+{{ end }}

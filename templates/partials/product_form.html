@@ -1,0 +1,38 @@
+{{ define "product-form" }}
+{{ if .Edit }}
+	<form class="grid-form" hx-post="/products/update?id={{ .Edit.ID }}" hx-target="#products-table" hx-swap="innerHTML">
+		<label>
+			<span>Name *</span>
+			<input type="text" name="name" required value="{{ .Edit.Name }}">
+		</label>
+		<label>
+			<span>SKU</span>
+			<input type="text" value="{{ .Edit.SKU }}" disabled>
+		</label>
+		<label>
+			<span>Price *</span>
+			<input name="price" type="number" step="0.01" min="0.01" required value="{{ .Edit.PriceValue }}">
+		</label>
+		<label>
+			<span>Cost</span>
+			<input name="cost_price" type="number" step="0.01" min="0" value="{{ .Edit.CostPriceValue }}">
+		</label>
+		<label>
+			<span>Tax %</span>
+			<input name="tax_rate" type="number" step="0.01" min="0" value="{{ .Edit.TaxRate }}">
+		</label>
+		<label>
+			<span>Low Stock Threshold</span>
+			<input name="low_stock_threshold" type="number" min="1" value="{{ .Edit.LowStockThreshold }}">
+		</label>
+		<label class="wide">
+			<span>Description</span>
+			<input type="text" name="description" value="{{ .Edit.Description }}">
+		</label>
+		<button class="button" type="submit">Update Product</button>
+		<a class="button button--muted" href="/products">Cancel</a>
+	</form>
+{{ end }}
+{{ end }}
+
+{{ template "product-form" . }}
