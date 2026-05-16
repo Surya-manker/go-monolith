@@ -1296,6 +1296,16 @@ tbody tr:hover td { background: var(--brand-50); }
    Landing Page
    ================================================================ */
 
+/* Override the global html,body { overflow:hidden; height:100% } set for the
+   sidebar app layout — the landing page must scroll normally. */
+html:has(body.landing-body),
+body.landing-body {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+  overflow-x: hidden;
+}
+
 .landing-body {
   background: var(--bg);
   color: var(--text);
@@ -1723,19 +1733,54 @@ tbody tr:hover td { background: var(--brand-50); }
 .land-footer-links a:hover { color: #fff; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .land-hero        { grid-template-columns: 1fr; padding: 48px 24px 40px; }
-  .land-hero-grid   { display: none; }
-  .land-features    { grid-template-columns: 1fr; }
-  .land-stat        { padding: 0 20px; }
-  .land-nav         { padding: 0 20px; }
-  .land-section, .land-modules-section { padding: 56px 24px; }
+
+/* Tablet landscape: 3-col features → 2-col */
+@media (max-width: 1100px) {
+  .land-features { grid-template-columns: repeat(2, 1fr); }
+  .land-hero     { gap: 32px; }
 }
 
+/* Tablet portrait: stack hero, hide mockup */
+@media (max-width: 860px) {
+  .land-nav     { padding: 0 20px; }
+  .land-hero    { grid-template-columns: 1fr; padding: 56px 24px 48px; text-align: center; }
+  .land-hero-inner { max-width: 100%; }
+  .land-hero-cta   { justify-content: center; }
+  .land-hero-grid  { display: none; }
+  .land-badge      { margin-left: auto; margin-right: auto; }
+  .land-features   { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .land-stat       { padding: 0 24px; }
+  .land-section, .land-modules-section { padding: 60px 24px; }
+  .land-cta-section { padding: 60px 24px; }
+  .land-footer      { padding: 24px 20px; }
+  .land-footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* Mobile: single column */
 @media (max-width: 600px) {
-  .land-stats       { gap: 16px; }
-  .land-stat-divider { display: none; }
-  .land-stat        { padding: 8px 0; }
-  .land-stats       { flex-direction: column; padding: 24px; }
+  .land-nav               { height: 54px; padding: 0 16px; }
   .land-nav-actions .land-btn--ghost { display: none; }
+  .land-btn--lg           { padding: 11px 22px; font-size: 14px; }
+  .land-hero              { padding: 40px 16px 36px; }
+  .land-hero-h1           { font-size: 32px; }
+  .land-hero-sub          { font-size: 15px; }
+  .land-hero-cta          { flex-direction: column; align-items: center; }
+  .land-hero-cta .land-btn { width: 100%; justify-content: center; }
+  .land-stats             { flex-direction: column; padding: 28px 16px; gap: 20px; }
+  .land-stat-divider      { width: 80px; height: 1px; }
+  .land-stat              { padding: 0; }
+  .land-stat strong       { font-size: 22px; }
+  .land-features          { grid-template-columns: 1fr; gap: 14px; }
+  .land-feature-card      { padding: 22px; }
+  .land-section, .land-modules-section { padding: 48px 16px; }
+  .land-section-h2        { font-size: 24px; }
+  .land-section-sub       { font-size: 14px; }
+  .land-modules-grid      { gap: 8px; }
+  .land-module-chip       { font-size: 12px; padding: 6px 12px; }
+  .land-cta-section       { padding: 48px 16px; }
+  .land-cta-inner h2      { font-size: 26px; }
+  .land-cta-inner p       { font-size: 14px; }
+  .land-cta-inner .land-hero-cta { flex-direction: column; align-items: center; }
+  .land-cta-inner .land-btn      { width: 100%; justify-content: center; }
+  .land-footer            { padding: 20px 16px; }
 }
