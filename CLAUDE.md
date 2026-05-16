@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 $env:DATABASE_DSN = "root:@tcp(127.0.0.1:3306)/invobill?parseTime=true&charset=utf8mb4"
 go run main.go
 
-# Seed the database (admin + staff users + sample records; idempotent)
+# Seed the database (admin + staff + sample data; idempotent)
 go run ./seed/
 
 # Build binary
@@ -37,6 +37,11 @@ No test suite exists. Go version: **1.25**.
 | `GST_SELLER_GSTIN` | _(empty)_ | First 2 digits auto-set `GST_STATE_CODE` |
 | `GST_SELLER_ADDRESS` | _(empty)_ | Appears on PDF invoices |
 | `GST_STATE_CODE` | first 2 chars of GSTIN | Determines CGST+SGST vs IGST |
+| `SMTP_HOST` | _(empty)_ | SMTP server — if unset, mailer is a no-op |
+| `SMTP_PORT` | `587` | SMTP port |
+| `SMTP_USER` | _(empty)_ | SMTP username |
+| `SMTP_PASS` | _(empty)_ | SMTP password |
+| `SMTP_FROM` | `noreply@invobill.in` | Sender address on outgoing emails |
 
 ## Architecture
 
@@ -51,24 +56,48 @@ HTTP → Security → RateLimiter(60rps) → [Auth → CSRF →] routes/routes.g
 
 | Category | Auth | CSRF | Examples |
 |---|---|---|---|
-| Public pages | No | No | `GET /`, `/about`, `/contact`, `/generator` |
+| SEO | No | No | `GET /robots.txt`, `GET /sitemap.xml` |
+| Public pages | No | No | `/`, `/about`, `/features`, `/pricing`, `/contact`, `/generator`, `/demo` |
 | Auth pages | No | No | `/login`, `/register`, `/logout` |
-| Protected HTML | Yes | Yes | `/dashboard`, `/products`, all module routes |
+| Protected HTML | Yes | Yes | `/dashboard`, `/products`, `/setup`, all module routes |
 | REST API `/api/v1/*` | Yes (cookie) | No | JSON responses |
 
-The catch-all `mux.Handle("/", authHandler)` routes everything not explicitly matched to the auth+CSRF-protected mux. Public pages must be registered **before** this catch-all on the outer `mux`.
+The catch-all `mux.Handle("/", authHandler)` routes everything unmatched to the auth+CSRF-protected mux. **All public pages must be registered on the outer `mux` before this catch-all.**
 
 ### Renderer (`handlers/renderer.go`)
 
-Three methods — choose based on layout needed:
+Three methods — choose based on layout:
 
-| Method | Layout template | Use for |
+| Method | Layout | Use for |
 |---|---|---|
 | `Page(w, "page.html", data)` | `layouts/base.html` + sidebar | All authenticated app pages |
 | `Auth(w, "page.html", data)` | `layouts/auth.html` | Login / register |
-| `Landing(w, "page.html", data)` | `layouts/landing.html` | Public marketing pages |
+| `Landing(w, "page.html", data)` | `layouts/landing.html` | All public marketing pages |
 
-Templates are parsed from disk on every request — changes are live without restart. The `funcMap()` exposes `initial` (first letter of a string) and `hasPermission` (RBAC check) to all templates.
+Templates are parsed from disk on every request — HTML/CSS changes are live without restart. `funcMap()` exposes `initial` (first letter) and `hasPermission` (RBAC) to all templates.
+
+### Public Pages
+
+`layouts/landing.html` provides the shared navbar (Home · Features · Pricing · About · Generator · Contact), mobile hamburger menu, multi-column footer, animation JS, and theme toggle. Page templates only define `{{ define "content" }}`.
+
+| Route | Handler | Notes |
+|---|---|---|
+| `GET /` | `Home` | Full SaaS conversion page |
+| `GET /features` | `FeaturesPage` | Feature deep-dives with HTML/CSS art |
+| `GET /pricing` | `PricingPage` | 3-tier pricing + comparison table |
+| `GET /about` | `About` | Mission, how-it-works, tech stack |
+| `GET /contact` | `ContactPage` / `ContactPost` | Contact form with validation |
+| `GET /generator` | `Generator` | Client-side GST invoice builder (JS only) |
+| `GET /demo` | `Demo` | Auto-login as admin demo account |
+| `GET /setup` | `OnboardingPage` | 3-step setup wizard (protected) |
+
+### Mailer (`services/mailer.go`)
+
+`Mailer` interface with two implementations:
+- **`NoopMailer`** — default when `SMTP_HOST` is unset; silently discards all mail.
+- **`SMTPMailer`** — activated by setting `SMTP_HOST`; sends HTML emails via `net/smtp`.
+
+Methods: `SendInvoice`, `SendWelcome`, `SendPasswordReset`. `App.Mailer` is wired in `main.go`.
 
 ### Generic Module System
 
@@ -76,30 +105,32 @@ Ten entities are driven by a single engine with no per-module route or template 
 
 - **Schema**: `models/business.go` — `ModuleStore` implements `List`, `Get`, `Create`, `Update`, `Delete`, `Trash`, `Restore`, `HardDelete` for any table.
 - **Config**: `services/module_service.go:NewModuleService()` — a `[]ModuleConfig` slice defines each module's `Key`, `Table`, `Fields`, and `Title`.
-- **Routes**: `routes/routes.go` — one loop registers 5 HTML + 3 trash routes per module.
+- **Routes**: one loop in `routes/routes.go` registers 5 HTML + 3 trash routes per module.
 - **Templates**: `templates/pages/crud.html` (full page) + `templates/partials/crud_table.html` (HTMX swap).
 
-**To add a new generic module:** add a `ModuleConfig` entry to the slice in `NewModuleService()`. No other changes needed.
+**To add a new generic module:** add one `ModuleConfig` entry to `NewModuleService()`. No other changes needed.
 
-**Products are NOT generic** — `handlers/product_handler.go`, `services/product_service.go`, and `models/product.go` exist separately because products require stock management, SKU, and threshold fields.
+**Products are NOT generic** — dedicated handler/service/model because they require stock management, SKU, and threshold fields.
 
-### Public Landing Pages
+### Demo Mode
 
-`/`, `/about`, `/contact`, `/generator` all use `Renderer.Landing()` and the `layouts/landing.html` layout. The layout includes the shared navbar (Home · About · Generator · Contact), mobile hamburger menu, multi-column footer, and all animation + theme JS. Page templates only define `{{ define "content" }}` — no nav/footer repetition.
+`GET /demo` logs the visitor in as `admin@invobill.com` (seeded by `go run ./seed/`) and sets a `demo_mode=1` cookie (non-HttpOnly so JS can read it). Run the seed script before using the demo route.
 
-The `/generator` page is entirely client-side JavaScript — the Go handler just serves the template. It renders a live GST invoice preview and uses `window.print()` for PDF output.
+### Onboarding Wizard (`/setup`)
+
+Three-step form (Business details → GST setup → Invoice preferences). Protected route — requires a valid session. On completion redirects to `/dashboard?welcome=1`. Steps are stateless: each POST advances via `?step=N` query param.
 
 ### Animation System
 
-`static/css/app.css` defines CSS keyframes and a scroll-triggered class system. Add `data-anim="up|fade|left|right|scale"` to any element in landing page templates. The `IntersectionObserver` in `landing.html` adds `.visible` when the element enters the viewport, triggering the transition. Inline `style="transition-delay:.Xs"` controls stagger timing.
+`static/css/app.css` defines CSS keyframes and a scroll-triggered system. Add `data-anim="up|fade|left|right|scale"` to any landing page element. `IntersectionObserver` in `landing.html` adds `.visible` on viewport entry. Use inline `style="transition-delay:.Xs"` for stagger timing.
 
 ### CSRF
 
-`middleware/csrf.go` validates POST/PUT/DELETE on all protected HTML routes. Token lives in the `csrf_token` cookie; HTMX injects it via the `htmx:configRequest` listener in `base.html`. Plain HTML `<form method="POST">` must include a hidden `_csrf` field — otherwise 403.
+`middleware/csrf.go` validates POST/PUT/DELETE on all protected HTML routes. Token lives in the `csrf_token` cookie; HTMX injects it via `htmx:configRequest` in `base.html`. Plain HTML `<form method="POST">` on protected routes must include a hidden `_csrf` field — otherwise 403.
 
 ### RBAC
 
-`middleware/rbac.go` maps roles to `module:action` pairs. Roles: `super_admin` / `admin` (all), `manager`, `accountant`, `staff`. The template function `hasPermission .User.Role "module" "action"` gates UI elements. Always use `middleware.UserFromContext(r.Context())` in handlers — never read identity from request body.
+`middleware/rbac.go` maps roles to `module:action` pairs. Roles: `super_admin` / `admin` (all), `manager`, `accountant`, `staff`. Template function `hasPermission .User.Role "module" "action"` gates UI elements. Always use `middleware.UserFromContext(r.Context())` — never read identity from request body.
 
 ### Toast Notifications
 
@@ -111,8 +142,12 @@ The `/generator` page is entirely client-side JavaScript — the Go handler just
 
 ### Real-time Dashboard
 
-`GET /sse/dashboard` streams Server-Sent Events. The dashboard template connects via `hx-ext="sse"` and swaps named SSE events into specific DOM elements (`#sse-products`, `#sse-invoices`, etc.).
+`GET /sse/dashboard` streams Server-Sent Events. Dashboard template connects via `hx-ext="sse"` and swaps named events into `#sse-products`, `#sse-invoices`, etc.
+
+### SEO
+
+`GET /robots.txt` and `GET /sitemap.xml` are served by `handlers/seo_handler.go`. The sitemap lists all public marketing pages with priorities and changefreq. Update `SitemapXML()` when adding new public routes.
 
 ### Auto Status Badges
 
-JS in `base.html` scans every `<td>` after load and HTMX swaps. If the cell text matches a word in `STATUS_MAP` (paid, pending, overdue, draft, active, etc.), it wraps it in `<span class="badge badge--{status}">`. To support a new status word, add it to `STATUS_MAP` in `base.html` only.
+JS in `base.html` scans every `<td>` after load and HTMX swaps. If text matches a word in `STATUS_MAP`, it wraps in `<span class="badge badge--{status}">`. To add a new status, update `STATUS_MAP` in `base.html` only.
