@@ -13,12 +13,19 @@ func New(app *handlers.App) http.Handler {
 	// Static assets — no auth required.
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	// ── SEO ───────────────────────────────────────────────────────────────────
+	mux.HandleFunc("GET /robots.txt", app.RobotsTxt)
+	mux.HandleFunc("GET /sitemap.xml", app.SitemapXML)
+
 	// ── Public pages ─────────────────────────────────────────────────────────
 	mux.HandleFunc("GET /{$}", app.Home)
 	mux.HandleFunc("GET /about", app.About)
 	mux.HandleFunc("GET /contact", app.ContactPage)
 	mux.HandleFunc("POST /contact", app.ContactPost)
 	mux.HandleFunc("GET /generator", app.Generator)
+	mux.HandleFunc("GET /pricing", app.PricingPage)
+	mux.HandleFunc("GET /features", app.FeaturesPage)
+	mux.HandleFunc("GET /demo", app.Demo)
 
 	// ── Auth routes (public, no CSRF needed) ────────────────────────────────
 	mux.HandleFunc("GET /login", app.LoginPage)
@@ -65,6 +72,10 @@ func New(app *handlers.App) http.Handler {
 
 	authMux.HandleFunc("GET /profile", app.ProfilePage)
 	authMux.HandleFunc("POST /profile", app.ProfileUpdate)
+
+	// Onboarding wizard
+	authMux.HandleFunc("GET /setup", app.OnboardingPage)
+	authMux.HandleFunc("POST /setup", app.OnboardingPost)
 
 	// Admin-only: user management with password reset
 	adminOnly := middleware.RequireRole("admin", "super_admin")

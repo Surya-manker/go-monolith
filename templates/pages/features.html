@@ -1,0 +1,467 @@
+{{ define "title" }}Features &mdash; InvoBill GST Billing &amp; Inventory Software{{ end }}
+
+{{ define "content" }}
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<div class="land-hero-section land-hero-section--short">
+	<div class="land-inner">
+		<p class="land-eyebrow" style="color:#a5b4fc" data-anim="fade">Full platform overview</p>
+		<h1 class="land-hero-h1" data-anim="up">Everything you need to<br><em>run your business</em></h1>
+		<p class="land-hero-sub" data-anim="up" style="transition-delay:.1s;max-width:580px;margin-left:auto;margin-right:auto;text-align:center">
+			From GST invoicing to inventory alerts, role-based access to real-time analytics &mdash;
+			InvoBill is a complete business operating system built for India.
+		</p>
+		<div class="land-hero-cta" data-anim="up" style="transition-delay:.18s;justify-content:center">
+			<a href="/register" class="land-btn land-btn--primary land-btn--lg">Start Free</a>
+			<a href="/demo" class="land-btn land-btn--outline land-btn--lg">Watch Demo</a>
+		</div>
+	</div>
+</div>
+
+<!-- ── Feature deep-dives ──────────────────────────────────────── -->
+<section class="land-section">
+	<div class="land-section-inner">
+		<p class="land-eyebrow" data-anim="fade">Core capabilities</p>
+		<h2 class="land-section-h2" data-anim="up">Six pillars of InvoBill</h2>
+		<p class="land-section-sub" data-anim="up" style="transition-delay:.08s">Each module is designed to work together seamlessly — no integrations needed.</p>
+	</div>
+
+	<!-- Feature 1: GST Invoicing -->
+	<div class="land-feat-deep">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-text" data-anim="left">
+				<div class="land-feature-icon land-feature-icon--green" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">GST-Compliant Invoicing</h3>
+				<p class="land-feat-deep-desc">Generate professional, GST-compliant PDF invoices in one click. The system automatically determines whether to split as CGST+SGST (intra-state) or apply IGST (inter-state) by comparing your seller GSTIN with the buyer's GSTIN prefix.</p>
+				<ul class="land-feat-bullets">
+					<li>Auto CGST/SGST and IGST calculation based on GSTINs</li>
+					<li>Support for all GST slabs: 0%, 5%, 12%, 18%, 28%</li>
+					<li>HSN/SAC code support on every line item</li>
+					<li>Professional PDF layout with your business branding</li>
+					<li>Sequential invoice numbering (INV-0001, INV-0002...)</li>
+					<li>Email PDF invoices directly to customers (Pro+)</li>
+				</ul>
+			</div>
+			<div class="land-feat-deep-art" data-anim="right">
+				<!-- Invoice mockup illustration -->
+				<div class="land-art-invoice">
+					<div class="land-art-inv-header">
+						<div>
+							<div class="land-art-inv-brand">InvoBill Co.</div>
+							<div class="land-art-inv-gstin">GSTIN: 27AABCU9603R1ZX</div>
+						</div>
+						<div class="land-art-inv-num">
+							<span>TAX INVOICE</span>
+							<strong>#INV-0047</strong>
+						</div>
+					</div>
+					<div class="land-art-inv-parties">
+						<div>
+							<div class="land-art-inv-party-label">Billed To</div>
+							<div class="land-art-inv-party-name">Rahul Sharma</div>
+							<div class="land-art-inv-party-gstin">29AAPFR2965Q1ZT</div>
+						</div>
+						<div style="text-align:right">
+							<div class="land-art-inv-party-label">Invoice Date</div>
+							<div class="land-art-inv-party-name">16 May 2026</div>
+						</div>
+					</div>
+					<div class="land-art-inv-table">
+						<div class="land-art-inv-row land-art-inv-row--head">
+							<span>Item</span><span>Qty</span><span>Rate</span><span>GST</span><span>Total</span>
+						</div>
+						<div class="land-art-inv-row">
+							<span>LED Monitor 24"</span><span>2</span><span>&#8377;8,500</span><span>18%</span><span>&#8377;20,060</span>
+						</div>
+						<div class="land-art-inv-row">
+							<span>USB-C Hub</span><span>5</span><span>&#8377;1,200</span><span>18%</span><span>&#8377;7,080</span>
+						</div>
+					</div>
+					<div class="land-art-inv-summary">
+						<div class="land-art-inv-tax-row"><span>IGST @ 18%</span><span>&#8377;4,140</span></div>
+						<div class="land-art-inv-total"><span>Grand Total</span><span>&#8377;27,140</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feature 2: Live Dashboard -->
+	<div class="land-feat-deep land-feat-deep--alt">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-art" data-anim="left">
+				<!-- Dashboard mini metrics illustration -->
+				<div class="land-art-dashboard">
+					<div class="land-art-db-title">Live Dashboard</div>
+					<div class="land-art-db-metrics">
+						<div class="land-art-db-metric" style="border-color:rgba(99,102,241,.4)">
+							<span class="land-art-db-label">Revenue</span>
+							<span class="land-art-db-val" style="color:#818cf8">&#8377;1,84,750</span>
+							<span class="land-art-db-delta" style="color:#34d399">&#9650; 12.4%</span>
+						</div>
+						<div class="land-art-db-metric" style="border-color:rgba(16,185,129,.4)">
+							<span class="land-art-db-label">Paid Invoices</span>
+							<span class="land-art-db-val" style="color:#34d399">18</span>
+							<span class="land-art-db-delta" style="color:#34d399">&#9650; 3 today</span>
+						</div>
+						<div class="land-art-db-metric" style="border-color:rgba(245,158,11,.4)">
+							<span class="land-art-db-label">Outstanding</span>
+							<span class="land-art-db-val" style="color:#fbbf24">&#8377;54,680</span>
+							<span class="land-art-db-delta" style="color:#fbbf24">5 pending</span>
+						</div>
+					</div>
+					<div class="land-art-db-bar-section">
+						<div class="land-art-db-bar-label">Monthly Revenue</div>
+						<div class="land-art-db-bars">
+							<div class="land-art-db-bar" style="height:40%"></div>
+							<div class="land-art-db-bar" style="height:65%"></div>
+							<div class="land-art-db-bar" style="height:50%"></div>
+							<div class="land-art-db-bar" style="height:80%"></div>
+							<div class="land-art-db-bar" style="height:55%"></div>
+							<div class="land-art-db-bar" style="height:90%"></div>
+							<div class="land-art-db-bar land-art-db-bar--active" style="height:100%"></div>
+						</div>
+					</div>
+					<div class="land-art-db-sse">
+						<span class="land-art-db-sse-dot"></span>
+						Live &mdash; updates in real-time
+					</div>
+				</div>
+			</div>
+			<div class="land-feat-deep-text" data-anim="right">
+				<div class="land-feature-icon land-feature-icon--blue" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">Real-Time Dashboard</h3>
+				<p class="land-feat-deep-desc">Get a live pulse on your business. The dashboard streams metrics via Server-Sent Events (SSE) — revenue, pending invoices, stock levels, and top customers refresh automatically without you lifting a finger.</p>
+				<ul class="land-feat-bullets">
+					<li>Revenue, invoice, and product metrics at a glance</li>
+					<li>Server-Sent Events (SSE) for live updates — no polling</li>
+					<li>Top customers by revenue</li>
+					<li>Low-stock alerts visible on the dashboard</li>
+					<li>Overdue invoice tracking</li>
+					<li>Comparative period stats (this month vs last month)</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feature 3: Inventory -->
+	<div class="land-feat-deep">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-text" data-anim="left">
+				<div class="land-feature-icon land-feature-icon--amber" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">Inventory Control</h3>
+				<p class="land-feat-deep-desc">Never run out of stock unexpectedly. Set minimum thresholds per product, receive automatic alerts when stock falls below the threshold, and view a complete log of every stock movement with full traceability.</p>
+				<ul class="land-feat-bullets">
+					<li>Per-product stock thresholds with automatic alerts</li>
+					<li>Stock deducted automatically when invoice is created</li>
+					<li>Manual stock adjustments with reason logging</li>
+					<li>Complete stock movement history for every product</li>
+					<li>Multi-category product organisation</li>
+					<li>HSN/SAC code and GST rate per product</li>
+				</ul>
+			</div>
+			<div class="land-feat-deep-art" data-anim="right">
+				<!-- Stock alert illustration -->
+				<div class="land-art-stock">
+					<div class="land-art-stock-title">Inventory Status</div>
+					<div class="land-art-stock-rows">
+						<div class="land-art-stock-row">
+							<div class="land-art-stock-info">
+								<span class="land-art-stock-name">LED Monitor 24"</span>
+								<span class="land-art-stock-sku">SKU: MON-24-LED</span>
+							</div>
+							<div class="land-art-stock-right">
+								<div class="land-art-stock-bar-wrap">
+									<div class="land-art-stock-bar" style="width:72%;background:#34d399"></div>
+								</div>
+								<span class="land-art-stock-qty" style="color:#34d399">72 units</span>
+							</div>
+						</div>
+						<div class="land-art-stock-row">
+							<div class="land-art-stock-info">
+								<span class="land-art-stock-name">USB-C Hub Pro</span>
+								<span class="land-art-stock-sku">SKU: USB-HUB-C</span>
+							</div>
+							<div class="land-art-stock-right">
+								<div class="land-art-stock-bar-wrap">
+									<div class="land-art-stock-bar" style="width:18%;background:#fbbf24"></div>
+								</div>
+								<span class="land-art-stock-qty" style="color:#fbbf24">18 units</span>
+							</div>
+						</div>
+						<div class="land-art-stock-row land-art-stock-row--alert">
+							<div class="land-art-stock-info">
+								<span class="land-art-stock-name">HDMI Cable 2m</span>
+								<span class="land-art-stock-sku">SKU: HDMI-2M</span>
+							</div>
+							<div class="land-art-stock-right">
+								<div class="land-art-stock-bar-wrap">
+									<div class="land-art-stock-bar" style="width:5%;background:#f87171"></div>
+								</div>
+								<span class="land-art-stock-qty" style="color:#f87171">5 units</span>
+							</div>
+						</div>
+					</div>
+					<div class="land-art-stock-alert">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+						1 product below threshold &mdash; reorder now
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feature 4: RBAC -->
+	<div class="land-feat-deep land-feat-deep--alt">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-art" data-anim="left">
+				<!-- RBAC illustration -->
+				<div class="land-art-rbac">
+					<div class="land-art-rbac-title">Team &amp; Permissions</div>
+					<div class="land-art-rbac-roles">
+						<div class="land-art-role land-art-role--admin">
+							<div class="land-art-role-avatar">SA</div>
+							<div class="land-art-role-info">
+								<span class="land-art-role-name">Suresh Admin</span>
+								<span class="land-art-role-badge" style="background:rgba(99,102,241,.2);color:#818cf8">Super Admin</span>
+							</div>
+							<div class="land-art-role-perms">All access</div>
+						</div>
+						<div class="land-art-role">
+							<div class="land-art-role-avatar" style="background:linear-gradient(135deg,#059669,#10b981)">PM</div>
+							<div class="land-art-role-info">
+								<span class="land-art-role-name">Priya Manager</span>
+								<span class="land-art-role-badge" style="background:rgba(16,185,129,.15);color:#34d399">Manager</span>
+							</div>
+							<div class="land-art-role-perms">View+Edit</div>
+						</div>
+						<div class="land-art-role">
+							<div class="land-art-role-avatar" style="background:linear-gradient(135deg,#d97706,#fbbf24)">RA</div>
+							<div class="land-art-role-info">
+								<span class="land-art-role-name">Ramesh Acct.</span>
+								<span class="land-art-role-badge" style="background:rgba(245,158,11,.15);color:#fbbf24">Accountant</span>
+							</div>
+							<div class="land-art-role-perms">Finance only</div>
+						</div>
+						<div class="land-art-role">
+							<div class="land-art-role-avatar" style="background:linear-gradient(135deg,#6b7280,#9ca3af)">KS</div>
+							<div class="land-art-role-info">
+								<span class="land-art-role-name">Kiran Staff</span>
+								<span class="land-art-role-badge" style="background:rgba(107,114,128,.15);color:#9ca3af">Staff</span>
+							</div>
+							<div class="land-art-role-perms">View only</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="land-feat-deep-text" data-anim="right">
+				<div class="land-feature-icon land-feature-icon--purple" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">Role-Based Access Control</h3>
+				<p class="land-feat-deep-desc">Give every team member exactly the right access. InvoBill has 5 built-in roles with granular module-level permissions — so your accountant can see financials without touching inventory, and staff can create invoices without deleting records.</p>
+				<ul class="land-feat-bullets">
+					<li>5 roles: Super Admin, Admin, Manager, Accountant, Staff</li>
+					<li>Granular view/create/edit/delete per module</li>
+					<li>Sidebar and action buttons adapt per role</li>
+					<li>Admin can reset any user's password</li>
+					<li>All actions recorded in the audit log</li>
+					<li>Session-based auth with bcrypt + CSRF protection</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feature 5: Payments -->
+	<div class="land-feat-deep">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-text" data-anim="left">
+				<div class="land-feature-icon land-feature-icon--red" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">Payments &amp; Credit Notes</h3>
+				<p class="land-feat-deep-desc">Track every rupee. Record partial or full payments against invoices, issue credit notes for returns or adjustments, and always know your outstanding balance at a glance. All transactions are linked to invoices and customers.</p>
+				<ul class="land-feat-bullets">
+					<li>Record partial and full payments against invoices</li>
+					<li>Multiple payment modes: cash, UPI, NEFT, cheque</li>
+					<li>Issue credit notes for returns and adjustments</li>
+					<li>Outstanding balance tracking per customer</li>
+					<li>Payment history and receipt generation</li>
+					<li>Overdue invoice detection and alerts</li>
+				</ul>
+			</div>
+			<div class="land-feat-deep-art" data-anim="right">
+				<!-- Payment tracker illustration -->
+				<div class="land-art-payments">
+					<div class="land-art-pay-title">Invoice #INV-0047</div>
+					<div class="land-art-pay-amount">
+						<span class="land-art-pay-label">Invoice Total</span>
+						<span class="land-art-pay-val">&#8377;27,140</span>
+					</div>
+					<div class="land-art-pay-bar-wrap">
+						<div class="land-art-pay-bar">
+							<div class="land-art-pay-fill" style="width:74%"></div>
+						</div>
+						<div class="land-art-pay-bar-labels">
+							<span style="color:#34d399">Paid &#8377;20,000</span>
+							<span style="color:#fbbf24">Due &#8377;7,140</span>
+						</div>
+					</div>
+					<div class="land-art-pay-history">
+						<div class="land-art-pay-entry">
+							<div class="land-art-pay-entry-icon" style="background:rgba(16,185,129,.15);color:#34d399">
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+							</div>
+							<div>
+								<span class="land-art-pay-entry-label">Payment 1 &mdash; UPI</span>
+								<span class="land-art-pay-entry-date">12 May 2026</span>
+							</div>
+							<span class="land-art-pay-entry-amt">+&#8377;20,000</span>
+						</div>
+						<div class="land-art-pay-entry land-art-pay-entry--pending">
+							<div class="land-art-pay-entry-icon" style="background:rgba(245,158,11,.15);color:#fbbf24">
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+							</div>
+							<div>
+								<span class="land-art-pay-entry-label">Balance Due</span>
+								<span class="land-art-pay-entry-date">Due: 30 May 2026</span>
+							</div>
+							<span class="land-art-pay-entry-amt" style="color:#fbbf24">&#8377;7,140</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Feature 6: Reports -->
+	<div class="land-feat-deep land-feat-deep--alt">
+		<div class="land-feat-deep-inner">
+			<div class="land-feat-deep-art" data-anim="left">
+				<!-- Reports illustration -->
+				<div class="land-art-reports">
+					<div class="land-art-rep-title">Reports &amp; Analytics</div>
+					<div class="land-art-rep-cards">
+						<div class="land-art-rep-card" style="border-left:3px solid #818cf8">
+							<span class="land-art-rep-card-label">Total Revenue</span>
+							<span class="land-art-rep-card-val">&#8377;12,84,350</span>
+							<span class="land-art-rep-card-period">Last 30 days</span>
+						</div>
+						<div class="land-art-rep-card" style="border-left:3px solid #34d399">
+							<span class="land-art-rep-card-label">Invoices Issued</span>
+							<span class="land-art-rep-card-val">247</span>
+							<span class="land-art-rep-card-period">Last 30 days</span>
+						</div>
+					</div>
+					<div class="land-art-rep-table">
+						<div class="land-art-rep-row land-art-rep-row--head">
+							<span>Customer</span><span>Invoices</span><span>Revenue</span>
+						</div>
+						<div class="land-art-rep-row">
+							<span>Mehta Electronics</span><span>18</span><span>&#8377;2,84,320</span>
+						</div>
+						<div class="land-art-rep-row">
+							<span>FreshMart</span><span>12</span><span>&#8377;1,56,800</span>
+						</div>
+						<div class="land-art-rep-row">
+							<span>Kumar Traders</span><span>9</span><span>&#8377;98,450</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="land-feat-deep-text" data-anim="right">
+				<div class="land-feature-icon land-feature-icon--teal" style="margin-bottom:20px">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+				</div>
+				<h3 class="land-feat-deep-title">Reports &amp; Audit Trail</h3>
+				<p class="land-feat-deep-desc">Make data-driven decisions with comprehensive reports and an unbreakable audit trail. Every action — invoice creation, payment recording, stock adjustment, user login — is logged with the user, timestamp, and details.</p>
+				<ul class="land-feat-bullets">
+					<li>Sales reports by date range, customer, and product</li>
+					<li>Purchase order summary and vendor analysis</li>
+					<li>GST output and input tax summary</li>
+					<li>Full audit log: who did what and when</li>
+					<li>Daily snapshot cached in Redis for fast reporting</li>
+					<li>Export reports to CSV for offline analysis</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── Modules list ────────────────────────────────────────────── -->
+<section class="land-modules-section">
+	<div class="land-section-inner">
+		<p class="land-eyebrow" data-anim="fade">All modules</p>
+		<h2 class="land-section-h2" data-anim="up">13 modules, one platform</h2>
+		<p class="land-section-sub" data-anim="up" style="transition-delay:.08s">Every business operation covered — no integrations, no bolt-ons.</p>
+		<div class="land-modules-grid" data-anim="up" style="transition-delay:.16s">
+			{{ range .Modules }}
+			<div class="land-module-chip">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+				{{ . }}
+			</div>
+			{{ end }}
+		</div>
+	</div>
+</section>
+
+<!-- ── Tech stack ──────────────────────────────────────────────── -->
+<section class="land-section">
+	<div class="land-section-inner">
+		<p class="land-eyebrow" data-anim="fade">Under the hood</p>
+		<h2 class="land-section-h2" data-anim="up">Built for speed &amp; reliability</h2>
+		<p class="land-section-sub" data-anim="up" style="transition-delay:.08s">Chosen for reliability, speed, and simplicity &mdash; not hype.</p>
+		<div class="about-tech-grid" data-anim="up" style="transition-delay:.16s">
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#e0f2fe;color:#0284c7">Backend</span>
+				<strong>Go 1.25</strong>
+				<p>Standard library <code>net/http</code> &mdash; no frameworks, just fast, compiled Go. Handles thousands of requests per second on minimal hardware.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#fef3c7;color:#d97706">Frontend</span>
+				<strong>HTMX 2.0</strong>
+				<p>Hypermedia-driven UI. Partial page swaps without JavaScript frameworks. Fast, accessible, works without JS for core flows.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#d1fae5;color:#059669">Database</span>
+				<strong>MySQL</strong>
+				<p>Raw SQL queries via <code>go-sql-driver/mysql</code>. Each model owns its own migration. No ORM overhead, full control.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#ede9fe;color:#7c3aed">PDF</span>
+				<strong>go-pdf/fpdf</strong>
+				<p>Server-side GST invoice PDF generation. No browser, no headless Chrome, no dependencies. Pure Go, always consistent output.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#fee2e2;color:#dc2626">Security</span>
+				<strong>bcrypt + CSRF</strong>
+				<p>Password hashing with bcrypt, 64-char hex session tokens, CSRF protection on all forms, rate limiting at 60 rps.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#ccfbf1;color:#0d9488">Real-time</span>
+				<strong>Server-Sent Events</strong>
+				<p>Live dashboard metrics streamed via SSE &mdash; no WebSocket complexity, no polling, just efficient one-way real-time data.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────── -->
+<section class="land-cta-section">
+	<div class="land-cta-inner">
+		<h2 data-anim="up">See it in action</h2>
+		<p data-anim="up" style="transition-delay:.08s">Try every feature free for 14 days &mdash; no credit card required.</p>
+		<div class="land-hero-cta" data-anim="up" style="transition-delay:.16s">
+			<a href="/register" class="land-btn land-btn--white land-btn--lg">Start Free Trial</a>
+			<a href="/pricing" class="land-btn land-btn--outline-white land-btn--lg">View Pricing</a>
+		</div>
+	</div>
+</section>
+
+{{ end }}

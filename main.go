@@ -76,6 +76,7 @@ func main() {
 		AuthService:    services.NewAuthService(authStore),
 		AuditService:   services.NewAuditService(auditStore),
 		NotifService:   services.NewNotificationService(notifStore),
+		Mailer:         services.NewMailer(),
 		SellerName:     sellerName,
 		SellerGSTIN:    sellerGSTIN,
 		SellerAddress:  os.Getenv("GST_SELLER_ADDRESS"),

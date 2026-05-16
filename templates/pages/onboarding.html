@@ -1,0 +1,278 @@
+{{ define "title" }}Setup — InvoBill{{ end }}
+
+{{ define "content" }}
+<div class="onboard-wrap">
+	<div class="onboard-card">
+
+		<!-- Progress -->
+		<div class="onboard-progress">
+			<div class="onboard-steps">
+				<div class="onboard-step {{ if ge .Step 1 }}onboard-step--done{{ end }}">
+					<div class="onboard-step-num">{{ if gt .Step 1 }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{{ else }}1{{ end }}</div>
+					<span>Business</span>
+				</div>
+				<div class="onboard-step-line {{ if ge .Step 2 }}onboard-step-line--done{{ end }}"></div>
+				<div class="onboard-step {{ if ge .Step 2 }}onboard-step--done{{ end }}">
+					<div class="onboard-step-num">{{ if gt .Step 2 }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{{ else }}2{{ end }}</div>
+					<span>GST Setup</span>
+				</div>
+				<div class="onboard-step-line {{ if ge .Step 3 }}onboard-step-line--done{{ end }}"></div>
+				<div class="onboard-step {{ if ge .Step 3 }}onboard-step--done{{ end }}">
+					<div class="onboard-step-num">3</div>
+					<span>Invoice Prefs</span>
+				</div>
+			</div>
+			<div class="onboard-progress-bar">
+				<div class="onboard-progress-fill" style="width:{{ if eq .Step 1 }}33{{ else if eq .Step 2 }}66{{ else }}100{{ end }}%"></div>
+			</div>
+		</div>
+
+		{{ if eq .Step 1 }}
+		<!-- Step 1: Business Details -->
+		<div class="onboard-body">
+			<div class="onboard-icon">🏢</div>
+			<h2>Tell us about your business</h2>
+			<p class="onboard-sub">This will appear on your invoices and reports.</p>
+			{{ if .Error }}<div class="alert">{{ .Error }}</div>{{ end }}
+			<form method="POST" action="/setup" class="onboard-form">
+				<input type="hidden" name="step" value="1">
+				<label>
+					<span>Business name <em>*</em></span>
+					<input type="text" name="business_name" placeholder="Mehta Electronics Pvt. Ltd." required autofocus>
+				</label>
+				<label>
+					<span>Your name</span>
+					<input type="text" name="owner_name" placeholder="Anand Mehta" value="{{ if .User }}{{ .User.Name }}{{ end }}">
+				</label>
+				<label>
+					<span>Business type</span>
+					<select name="business_type">
+						<option value="sole_proprietor">Sole Proprietor</option>
+						<option value="partnership">Partnership</option>
+						<option value="pvt_ltd">Private Limited</option>
+						<option value="llp">LLP</option>
+						<option value="other">Other</option>
+					</select>
+				</label>
+				<label>
+					<span>Business address</span>
+					<input type="text" name="address" placeholder="123 MG Road, Mumbai, MH 400001">
+				</label>
+				<label>
+					<span>Phone number</span>
+					<input type="tel" name="phone" placeholder="+91 98765 43210">
+				</label>
+				<button type="submit" class="button button--full">Continue →</button>
+			</form>
+		</div>
+
+		{{ else if eq .Step 2 }}
+		<!-- Step 2: GST Setup -->
+		<div class="onboard-body">
+			<div class="onboard-icon">🧾</div>
+			<h2>GST Configuration</h2>
+			<p class="onboard-sub">Required for generating GST-compliant invoices with correct tax calculation.</p>
+			{{ if .Error }}<div class="alert">{{ .Error }}</div>{{ end }}
+			<form method="POST" action="/setup" class="onboard-form">
+				<input type="hidden" name="step" value="2">
+				<label>
+					<span>GSTIN (15-digit GST number)</span>
+					<input type="text" name="gstin" placeholder="27AABCU9603R1ZX" maxlength="15"
+						pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}"
+						title="Enter valid 15-character GSTIN">
+					<small style="color:var(--muted);font-size:11.5px;margin-top:4px;display:block">First 2 digits determine your state code for CGST/SGST vs IGST calculation.</small>
+				</label>
+				<label>
+					<span>Default tax rate</span>
+					<select name="default_tax">
+						<option value="0">0% (Exempt)</option>
+						<option value="5">5%</option>
+						<option value="12">12%</option>
+						<option value="18" selected>18% (Most common)</option>
+						<option value="28">28%</option>
+					</select>
+				</label>
+				<label>
+					<span>Bank name (for invoice footer)</span>
+					<input type="text" name="bank_name" placeholder="HDFC Bank">
+				</label>
+				<label>
+					<span>Bank account number</span>
+					<input type="text" name="bank_account" placeholder="50100123456789">
+				</label>
+				<label>
+					<span>IFSC code</span>
+					<input type="text" name="ifsc" placeholder="HDFC0001234">
+				</label>
+				<div style="display:flex;gap:10px">
+					<a href="/setup?step=1" class="button button--muted" style="flex:1;text-align:center">← Back</a>
+					<button type="submit" class="button" style="flex:2">Continue →</button>
+				</div>
+			</form>
+		</div>
+
+		{{ else }}
+		<!-- Step 3: Invoice Preferences -->
+		<div class="onboard-body">
+			<div class="onboard-icon">📄</div>
+			<h2>Invoice preferences</h2>
+			<p class="onboard-sub">Customize how your invoices look and behave.</p>
+			{{ if .Error }}<div class="alert">{{ .Error }}</div>{{ end }}
+			<form method="POST" action="/setup" class="onboard-form">
+				<input type="hidden" name="step" value="3">
+				<label>
+					<span>Invoice number prefix</span>
+					<input type="text" name="invoice_prefix" placeholder="INV" value="INV">
+					<small style="color:var(--muted);font-size:11.5px;margin-top:4px;display:block">e.g. INV → INV-2025-001</small>
+				</label>
+				<label>
+					<span>Payment terms (days)</span>
+					<select name="payment_terms">
+						<option value="0">Due on receipt</option>
+						<option value="7">Net 7</option>
+						<option value="15">Net 15</option>
+						<option value="30" selected>Net 30</option>
+						<option value="60">Net 60</option>
+					</select>
+				</label>
+				<label>
+					<span>Invoice notes (shown on every invoice)</span>
+					<textarea name="invoice_notes" rows="3" placeholder="Thank you for your business. Payment due within 30 days.">Thank you for your business. Payment due within 30 days.</textarea>
+				</label>
+				<label style="flex-direction:row;align-items:center;gap:10px;cursor:pointer">
+					<input type="checkbox" name="send_email" checked style="width:auto;min-height:auto">
+					<span style="font-size:13.5px;color:var(--text)">Send invoice copies to customers via email</span>
+				</label>
+				<div style="display:flex;gap:10px">
+					<a href="/setup?step=2" class="button button--muted" style="flex:1;text-align:center">← Back</a>
+					<button type="submit" class="button" style="flex:2">Finish Setup 🎉</button>
+				</div>
+			</form>
+		</div>
+		{{ end }}
+
+	</div>
+</div>
+
+<style>
+.onboard-wrap {
+	min-height: calc(100vh - 60px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 16px;
+	background: var(--bg);
+}
+.onboard-card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--r-xl);
+	box-shadow: var(--shadow-lg);
+	width: 100%;
+	max-width: 520px;
+	overflow: hidden;
+}
+.onboard-progress {
+	padding: 24px 28px 0;
+	background: var(--surface2);
+	border-bottom: 1px solid var(--border);
+}
+.onboard-steps {
+	display: flex;
+	align-items: center;
+	margin-bottom: 16px;
+}
+.onboard-step {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--muted);
+	text-transform: uppercase;
+	letter-spacing: .06em;
+}
+.onboard-step-num {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--border);
+	color: var(--muted);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 700;
+	transition: background .2s, color .2s;
+}
+.onboard-step--done .onboard-step-num {
+	background: #4f46e5;
+	color: #fff;
+}
+.onboard-step--done { color: #6366f1; }
+.onboard-step-line {
+	flex: 1;
+	height: 2px;
+	background: var(--border);
+	margin: 0 8px;
+	margin-bottom: 20px;
+	border-radius: 2px;
+	transition: background .2s;
+}
+.onboard-step-line--done { background: #4f46e5; }
+.onboard-progress-bar {
+	height: 3px;
+	background: var(--border);
+	border-radius: 2px;
+	margin-bottom: 0;
+	overflow: hidden;
+}
+.onboard-progress-fill {
+	height: 100%;
+	background: linear-gradient(90deg, #4f46e5, #818cf8);
+	border-radius: 2px;
+	transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+.onboard-body {
+	padding: 32px 28px 28px;
+	text-align: center;
+}
+.onboard-icon { font-size: 40px; margin-bottom: 12px; }
+.onboard-body h2 {
+	font-family: 'Plus Jakarta Sans', sans-serif;
+	font-size: 22px;
+	font-weight: 800;
+	color: var(--text);
+	margin-bottom: 8px;
+	letter-spacing: -.02em;
+}
+.onboard-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+.onboard-form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	text-align: left;
+}
+.onboard-form label { display: grid; gap: 5px; }
+.onboard-form label > span { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.onboard-form label > span em { color: #ef4444; font-style: normal; }
+.onboard-form input, .onboard-form select, .onboard-form textarea {
+	background: var(--surface2);
+	border: 1.5px solid var(--border);
+	border-radius: var(--r-sm);
+	color: var(--text);
+	font: inherit;
+	font-size: 14px;
+	min-height: 40px;
+	padding: 8px 12px;
+	transition: border-color .15s, box-shadow .15s;
+	width: 100%;
+}
+.onboard-form input:focus, .onboard-form select:focus, .onboard-form textarea:focus {
+	border-color: #6366f1;
+	box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+	outline: none;
+}
+</style>
+{{ end }}

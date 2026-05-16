@@ -1,0 +1,346 @@
+{{ define "title" }}Pricing &mdash; InvoBill GST Billing &amp; Inventory{{ end }}
+
+{{ define "content" }}
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<div class="land-hero-section land-hero-section--short">
+	<div class="land-inner">
+		<p class="land-eyebrow" style="color:#a5b4fc" data-anim="fade">Simple pricing</p>
+		<h1 class="land-hero-h1" data-anim="up">Plans that grow with<br><em>your business</em></h1>
+		<p class="land-hero-sub" data-anim="up" style="transition-delay:.1s;max-width:560px;margin-left:auto;margin-right:auto;text-align:center">
+			Start free, upgrade as you scale. No hidden charges, no per-invoice fees, no surprises.
+		</p>
+		<div class="land-pricing-toggle" data-anim="up" style="transition-delay:.18s">
+			<span class="land-toggle-label land-toggle-label--active" id="toggle-monthly">Monthly</span>
+			<button class="land-toggle-switch" id="billing-toggle" onclick="toggleBilling()" aria-label="Toggle billing period">
+				<span class="land-toggle-knob"></span>
+			</button>
+			<span class="land-toggle-label" id="toggle-annual">Annual <em class="land-save-badge">Save 20%</em></span>
+		</div>
+	</div>
+</div>
+
+<!-- ── Pricing cards ──────────────────────────────────────────── -->
+<section class="land-section">
+	<div class="land-section-inner" style="max-width:1200px">
+		<div class="land-pricing land-pricing--full">
+
+			<!-- Free -->
+			<div class="land-pricing-card" data-plan="free" data-anim="up" style="transition-delay:.05s">
+				<div class="land-plan-header">
+					<span class="land-plan-name">Free</span>
+					<p class="land-plan-tagline">For freelancers getting started</p>
+					<div class="land-plan-price">
+						<span class="land-plan-currency">&#8377;</span>
+						<span class="land-plan-amount" data-monthly="0" data-annual="0">0</span>
+						<span class="land-plan-period">/month</span>
+					</div>
+					<p class="land-plan-billed" id="free-billed"></p>
+				</div>
+				<a href="/register" class="land-btn land-btn--outline land-btn--block" style="margin-bottom:28px">Get Started Free</a>
+				<div class="land-plan-divider"></div>
+				<p class="land-plan-includes">Includes:</p>
+				<ul class="land-plan-features land-plan-features--full">
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 50 invoices per month</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 100 products</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 1 user</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> GST-compliant PDF invoices</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Basic reports &amp; dashboard</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Customer &amp; vendor management</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Inventory tracking</li>
+					<li class="land-plan-feature--muted"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Email invoices</li>
+					<li class="land-plan-feature--muted"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Priority support</li>
+					<li class="land-plan-feature--muted"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> API access</li>
+				</ul>
+			</div>
+
+			<!-- Pro (popular) -->
+			<div class="land-pricing-card land-pricing-card--popular" data-plan="pro" data-anim="up" style="transition-delay:.13s">
+				<div class="land-popular-badge">Most Popular</div>
+				<div class="land-plan-header">
+					<span class="land-plan-name">Pro</span>
+					<p class="land-plan-tagline">For growing teams</p>
+					<div class="land-plan-price">
+						<span class="land-plan-currency">&#8377;</span>
+						<span class="land-plan-amount" data-monthly="999" data-annual="799">999</span>
+						<span class="land-plan-period">/month</span>
+					</div>
+					<p class="land-plan-billed" id="pro-billed">Billed monthly</p>
+				</div>
+				<a href="/register" class="land-btn land-btn--primary land-btn--block" style="margin-bottom:28px">Start Pro Trial &mdash; 14 days free</a>
+				<div class="land-plan-divider"></div>
+				<p class="land-plan-includes">Everything in Free, plus:</p>
+				<ul class="land-plan-features land-plan-features--full">
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited invoices</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited products</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Up to 5 users</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Email invoices to customers</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Advanced reports &amp; analytics</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Credit notes &amp; payments</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Purchase orders</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Stock alerts &amp; logs</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Priority support</li>
+					<li class="land-plan-feature--muted"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> API access</li>
+				</ul>
+			</div>
+
+			<!-- Business -->
+			<div class="land-pricing-card" data-plan="business" data-anim="up" style="transition-delay:.21s">
+				<div class="land-plan-header">
+					<span class="land-plan-name">Business</span>
+					<p class="land-plan-tagline">For established enterprises</p>
+					<div class="land-plan-price">
+						<span class="land-plan-currency">&#8377;</span>
+						<span class="land-plan-amount" data-monthly="2499" data-annual="1999">2,499</span>
+						<span class="land-plan-period">/month</span>
+					</div>
+					<p class="land-plan-billed" id="biz-billed">Billed monthly</p>
+				</div>
+				<a href="/contact" class="land-btn land-btn--outline land-btn--block" style="margin-bottom:28px">Contact Sales</a>
+				<div class="land-plan-divider"></div>
+				<p class="land-plan-includes">Everything in Pro, plus:</p>
+				<ul class="land-plan-features land-plan-features--full">
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Unlimited users</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> REST API access</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dedicated account manager</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Custom domain support</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Audit logs &amp; compliance export</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> SLA uptime guarantee</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Data backup &amp; export</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> White-label invoices</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Onboarding &amp; training session</li>
+					<li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Phone support</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── Feature comparison table ──────────────────────────────── -->
+<section class="land-modules-section">
+	<div class="land-section-inner" style="max-width:1000px">
+		<p class="land-eyebrow" data-anim="fade">Compare plans</p>
+		<h2 class="land-section-h2" data-anim="up">Full feature comparison</h2>
+
+		<div class="land-pricing-table-wrap" data-anim="up" style="transition-delay:.1s">
+			<table class="land-pricing-table">
+				<thead>
+					<tr>
+						<th class="land-pt-feature-col">Feature</th>
+						<th>Free</th>
+						<th class="land-pt-popular">Pro</th>
+						<th>Business</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr class="land-pt-section-row"><td colspan="4">Invoicing</td></tr>
+					<tr>
+						<td>Monthly invoices</td>
+						<td>50</td>
+						<td class="land-pt-popular">Unlimited</td>
+						<td>Unlimited</td>
+					</tr>
+					<tr>
+						<td>GST-compliant PDF</td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Email invoices to customers</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Credit notes</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>White-label invoices</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-cross">&#10007;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr class="land-pt-section-row"><td colspan="4">Inventory &amp; Products</td></tr>
+					<tr>
+						<td>Products</td>
+						<td>100</td>
+						<td class="land-pt-popular">Unlimited</td>
+						<td>Unlimited</td>
+					</tr>
+					<tr>
+						<td>Stock alerts</td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Stock logs</td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr class="land-pt-section-row"><td colspan="4">Team &amp; Access</td></tr>
+					<tr>
+						<td>Users</td>
+						<td>1</td>
+						<td class="land-pt-popular">5</td>
+						<td>Unlimited</td>
+					</tr>
+					<tr>
+						<td>Role-based permissions</td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Audit logs</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr class="land-pt-section-row"><td colspan="4">Platform &amp; Support</td></tr>
+					<tr>
+						<td>API access</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-cross">&#10007;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Priority support</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-check">&#10003;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+					<tr>
+						<td>Dedicated account manager</td>
+						<td><span class="land-pt-cross">&#10007;</span></td>
+						<td class="land-pt-popular"><span class="land-pt-cross">&#10007;</span></td>
+						<td><span class="land-pt-check">&#10003;</span></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
+
+<!-- ── Pricing FAQ ────────────────────────────────────────────── -->
+<section class="land-section">
+	<div class="land-section-inner" style="max-width:760px">
+		<p class="land-eyebrow" data-anim="fade">Pricing FAQ</p>
+		<h2 class="land-section-h2" data-anim="up">Pricing questions answered</h2>
+
+		<div class="land-faq" data-anim="up" style="transition-delay:.1s">
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					Do you charge per invoice?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">Never. Paid plans have unlimited invoices with no per-invoice charges. You pay one flat monthly or annual fee — that's it.</p>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					Can I change my plan later?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">Yes. You can upgrade or downgrade at any time. Upgrades take effect immediately. Downgrades take effect at the end of your current billing period.</p>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					What payment methods do you accept?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">We accept all major credit and debit cards, UPI, and net banking. We use Razorpay for secure payment processing.</p>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					Is there a free trial for paid plans?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">Yes. Both Pro and Business plans come with a 14-day free trial. No credit card required to start the trial.</p>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					What happens to my data if I downgrade?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">Your data is always safe. If you downgrade below the limits of a plan (e.g., more than 100 products on Free), you'll be in read-only mode for the excess records until you either upgrade again or remove the extras.</p>
+			</div>
+			<div class="faq-item">
+				<button class="faq-q" onclick="toggleFaq(this)">
+					Do prices include GST?
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				<p class="faq-a">Prices shown are exclusive of GST. 18% GST will be applied at checkout. A GST invoice will be issued for all paid plan subscriptions.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── Enterprise contact ──────────────────────────────────────── -->
+<section class="land-modules-section">
+	<div class="land-section-inner">
+		<div class="land-enterprise-card" data-anim="up">
+			<div class="land-enterprise-icon">
+				<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+			</div>
+			<div class="land-enterprise-text">
+				<h3>Need a custom plan?</h3>
+				<p>For large enterprises with custom requirements — volume discounts, on-premise deployment, custom integrations, or dedicated infrastructure — let's talk.</p>
+			</div>
+			<a href="/contact" class="land-btn land-btn--primary">Talk to Sales</a>
+		</div>
+	</div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────── -->
+<section class="land-cta-section">
+	<div class="land-cta-inner">
+		<h2 data-anim="up">Ready to get started?</h2>
+		<p data-anim="up" style="transition-delay:.08s">Create your free account today &mdash; no credit card required.</p>
+		<div class="land-hero-cta" data-anim="up" style="transition-delay:.16s">
+			<a href="/register" class="land-btn land-btn--white land-btn--lg">Create Free Account</a>
+			<a href="/demo" class="land-btn land-btn--outline-white land-btn--lg">Try Demo</a>
+		</div>
+	</div>
+</section>
+
+<script>
+function toggleFaq(btn) {
+	var item = btn.closest('.faq-item');
+	var isOpen = item.classList.contains('faq-item--open');
+	document.querySelectorAll('.faq-item--open').forEach(function(el) {
+		el.classList.remove('faq-item--open');
+	});
+	if (!isOpen) item.classList.add('faq-item--open');
+}
+
+var isAnnual = false;
+function toggleBilling() {
+	isAnnual = !isAnnual;
+	var toggle = document.getElementById('billing-toggle');
+	var mLabel = document.getElementById('toggle-monthly');
+	var aLabel = document.getElementById('toggle-annual');
+	toggle.classList.toggle('land-toggle-switch--on', isAnnual);
+	mLabel.classList.toggle('land-toggle-label--active', !isAnnual);
+	aLabel.classList.toggle('land-toggle-label--active', isAnnual);
+
+	document.querySelectorAll('.land-plan-amount').forEach(function(el) {
+		var val = isAnnual ? el.dataset.annual : el.dataset.monthly;
+		if (val !== undefined) {
+			var num = parseInt(val);
+			el.textContent = num === 0 ? '0' : num.toLocaleString('en-IN');
+		}
+	});
+
+	var proBilled = document.getElementById('pro-billed');
+	var bizBilled = document.getElementById('biz-billed');
+	if (proBilled) proBilled.textContent = isAnnual ? 'Billed annually (&#8377;9,588/yr)' : 'Billed monthly';
+	if (bizBilled) bizBilled.textContent = isAnnual ? 'Billed annually (&#8377;23,988/yr)' : 'Billed monthly';
+}
+</script>
+
+{{ end }}

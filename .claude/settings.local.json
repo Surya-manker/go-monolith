@@ -14,7 +14,9 @@
       "PowerShell(Stop-Process *)",
       "PowerShell(gh auth *)",
       "Bash(powershell -Command \"Get-Item static/css/app.css, templates/layouts/base.html, templates/layouts/landing.html, templates/pages/home.html | Select-Object Name, Length, LastWriteTime\")",
-      "PowerShell(go build *)"
+      "PowerShell(go build *)",
+      "Bash(claude doctor *)",
+      "PowerShell(claude doctor *)"
     ]
   }
 }

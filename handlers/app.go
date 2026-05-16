@@ -9,6 +9,7 @@ type App struct {
 	AuthService    *services.AuthService
 	AuditService   *services.AuditService
 	NotifService   *services.NotificationService
+	Mailer         services.Mailer
 	// GST / seller config (read from env at startup)
 	SellerName    string
 	SellerGSTIN   string
