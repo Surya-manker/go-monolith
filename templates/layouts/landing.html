@@ -4,28 +4,183 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>{{ block "title" . }}InvoBill — Inventory & Billing Platform{{ end }}</title>
+	<title>{{ block "title" . }}InvoBill — Inventory &amp; Billing Platform{{ end }}</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 	<link rel="stylesheet" href="/static/css/app.css">
-	<script>
-		(function () {
-			var t = localStorage.getItem('theme');
-			if (t) document.documentElement.dataset.theme = t;
-		})();
-	</script>
+	<script>(function(){var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;})();</script>
 </head>
 <body class="landing-body">
 
+<!-- ── Navbar ─────────────────────────────────────────────────── -->
+<nav class="land-nav" id="land-nav">
+	<a href="/" class="land-brand">
+		<div class="sidebar-logo-mark">IB</div>
+		<span>InvoBill</span>
+	</a>
+	<div class="land-nav-links">
+		<a href="/" class="land-nav-link">Home</a>
+		<a href="/about" class="land-nav-link">About</a>
+		<a href="/generator" class="land-nav-link">Generator</a>
+		<a href="/contact" class="land-nav-link">Contact</a>
+	</div>
+	<div class="land-nav-actions">
+		<button onclick="toggleTheme()" class="land-theme-btn" aria-label="Toggle theme">
+			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+		</button>
+		<a href="/login" class="land-btn land-btn--ghost">Sign in</a>
+		<a href="/register" class="land-btn land-btn--primary">Get started</a>
+		<button class="land-hamburger" id="land-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+			<span></span><span></span><span></span>
+		</button>
+	</div>
+</nav>
+
+<!-- ── Mobile Menu ────────────────────────────────────────────── -->
+<div class="land-mobile-menu" id="land-mobile-menu">
+	<a href="/" class="land-mobile-link">Home</a>
+	<a href="/about" class="land-mobile-link">About</a>
+	<a href="/generator" class="land-mobile-link">Generator</a>
+	<a href="/contact" class="land-mobile-link">Contact</a>
+	<div class="land-mobile-divider"></div>
+	<a href="/login" class="land-mobile-link">Sign in</a>
+	<a href="/register" class="land-btn land-btn--primary" style="margin:8px 20px;text-align:center;justify-content:center;">Get started</a>
+</div>
+
 {{ block "content" . }}{{ end }}
 
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="land-footer">
+	<div class="land-footer-inner">
+		<div class="land-footer-col">
+			<a href="/" class="land-brand land-footer-brand">
+				<div class="sidebar-logo-mark">IB</div>
+				<span>InvoBill</span>
+			</a>
+			<p class="land-footer-tagline">Inventory &amp; Billing for Indian SMBs.<br>Built with Go &amp; HTMX.</p>
+		</div>
+		<div class="land-footer-col">
+			<p class="land-footer-heading">Product</p>
+			<a href="/" class="land-footer-link">Home</a>
+			<a href="/about" class="land-footer-link">About</a>
+			<a href="/generator" class="land-footer-link">Invoice Generator</a>
+		</div>
+		<div class="land-footer-col">
+			<p class="land-footer-heading">Company</p>
+			<a href="/contact" class="land-footer-link">Contact</a>
+			<a href="/login" class="land-footer-link">Sign in</a>
+			<a href="/register" class="land-footer-link">Register</a>
+		</div>
+		<div class="land-footer-col">
+			<p class="land-footer-heading">Built with</p>
+			<p class="land-footer-tech">Go &nbsp;·&nbsp; HTMX &nbsp;·&nbsp; MySQL</p>
+			<p class="land-footer-tech">Tailwind-inspired CSS</p>
+			<p class="land-footer-tech">GST-compliant PDF engine</p>
+		</div>
+	</div>
+	<div class="land-footer-bottom">
+		<p>&copy; 2025 InvoBill. All rights reserved.</p>
+		<p>Made for Indian businesses.</p>
+	</div>
+</footer>
+
 <script>
-	function toggleTheme() {
-		var next = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
-		document.documentElement.dataset.theme = next;
-		localStorage.setItem('theme', next);
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme() {
+	var next = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
+	document.documentElement.dataset.theme = next;
+	localStorage.setItem('theme', next);
+}
+
+// ── Mobile menu ────────────────────────────────────────────────
+function toggleMobileMenu() {
+	var menu = document.getElementById('land-mobile-menu');
+	var btn  = document.getElementById('land-hamburger');
+	var open = menu.classList.toggle('land-mobile-menu--open');
+	btn.classList.toggle('land-hamburger--open', open);
+	document.body.style.overflow = open ? 'hidden' : '';
+}
+document.addEventListener('click', function(e) {
+	var menu = document.getElementById('land-mobile-menu');
+	var btn  = document.getElementById('land-hamburger');
+	if (menu && menu.classList.contains('land-mobile-menu--open')) {
+		if (!menu.contains(e.target) && !btn.contains(e.target)) {
+			menu.classList.remove('land-mobile-menu--open');
+			btn.classList.remove('land-hamburger--open');
+			document.body.style.overflow = '';
+		}
 	}
+});
+
+// ── Active nav link ────────────────────────────────────────────
+(function() {
+	var path = location.pathname;
+	document.querySelectorAll('.land-nav-link, .land-mobile-link').forEach(function(a) {
+		var href = a.getAttribute('href');
+		if (!href) return;
+		var active = href === path || (href !== '/' && path.startsWith(href));
+		if (active) a.classList.add('land-nav-link--active');
+	});
+})();
+
+// ── Navbar scroll shadow ───────────────────────────────────────
+window.addEventListener('scroll', function() {
+	document.getElementById('land-nav').classList.toggle('land-nav--scrolled', window.scrollY > 10);
+}, { passive: true });
+
+// ── Scroll animations (Intersection Observer) ──────────────────
+(function() {
+	if (!('IntersectionObserver' in window)) {
+		document.querySelectorAll('[data-anim]').forEach(function(el) {
+			el.classList.add('visible');
+		});
+		return;
+	}
+	var observer = new IntersectionObserver(function(entries) {
+		entries.forEach(function(entry) {
+			if (entry.isIntersecting) {
+				entry.target.classList.add('visible');
+				observer.unobserve(entry.target);
+			}
+		});
+	}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+	document.querySelectorAll('[data-anim]').forEach(function(el) {
+		observer.observe(el);
+	});
+})();
+
+// ── Animated counters ──────────────────────────────────────────
+function animateCounter(el) {
+	var raw    = el.textContent.trim();
+	var suffix = raw.replace(/[0-9]/g, '');
+	var target = parseInt(raw);
+	if (isNaN(target)) return;
+	var start = null, duration = 1400;
+	(function step(ts) {
+		if (!start) start = ts;
+		var p = Math.min((ts - start) / duration, 1);
+		var eased = 1 - Math.pow(1 - p, 3);
+		el.textContent = Math.floor(eased * target) + suffix;
+		if (p < 1) requestAnimationFrame(step);
+	})(performance.now());
+}
+(function() {
+	var done = false;
+	var statsObserver = new IntersectionObserver(function(entries) {
+		if (done) return;
+		entries.forEach(function(entry) {
+			if (entry.isIntersecting) {
+				done = true;
+				entry.target.querySelectorAll('.land-stat strong').forEach(animateCounter);
+				statsObserver.disconnect();
+			}
+		});
+	}, { threshold: 0.5 });
+	var statsEl = document.querySelector('.land-stats');
+	if (statsEl) statsObserver.observe(statsEl);
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+{{ define "title" }}Contact — InvoBill{{ end }}
+
+{{ define "content" }}
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<div class="land-hero-section land-hero-section--short">
+	<div class="land-inner">
+		<p class="land-eyebrow" style="color:#a5b4fc" data-anim="fade">We'd love to hear from you</p>
+		<h1 class="land-hero-h1" data-anim="up">Get in <em>touch</em></h1>
+		<p class="land-hero-sub" data-anim="up" style="transition-delay:.1s;text-align:center;max-width:520px;margin-left:auto;margin-right:auto">
+			Have a question, feature request, or just want to say hello? Send us a message and we'll get back to you promptly.
+		</p>
+	</div>
+</div>
+
+<!-- ── Contact body ───────────────────────────────────────────── -->
+<section class="land-section">
+	<div class="contact-grid">
+
+		<!-- Form -->
+		<div class="contact-form-col" data-anim="left">
+			<h2 class="contact-col-title">Send a message</h2>
+
+			{{ if .Success }}
+			<div class="contact-success">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+				Message sent! We'll get back to you within 1–2 business days.
+			</div>
+			{{ end }}
+
+			{{ if .Error }}
+			<div class="contact-error">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+				{{ .Error }}
+			</div>
+			{{ end }}
+
+			<form class="contact-form" method="POST" action="/contact">
+				<div class="contact-row">
+					<label>
+						<span>Your name <em>*</em></span>
+						<input type="text" name="name" value="{{ .Name }}" required placeholder="Ravi Sharma" autocomplete="name">
+					</label>
+					<label>
+						<span>Email address <em>*</em></span>
+						<input type="email" name="email" value="{{ .Email }}" required placeholder="ravi@company.in" autocomplete="email">
+					</label>
+				</div>
+				<label>
+					<span>Subject <em>*</em></span>
+					<input type="text" name="subject" value="{{ .Subject }}" required placeholder="How can we help?">
+				</label>
+				<label>
+					<span>Message <em>*</em></span>
+					<textarea name="message" rows="6" required placeholder="Tell us more about your question or feedback…">{{ .Message }}</textarea>
+				</label>
+				<button type="submit" class="land-btn land-btn--primary land-btn--lg" style="width:100%;justify-content:center">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+					Send message
+				</button>
+			</form>
+		</div>
+
+		<!-- Info -->
+		<div class="contact-info-col" data-anim="right">
+			<h2 class="contact-col-title">Contact info</h2>
+			<div class="contact-info-cards">
+				<div class="contact-info-card">
+					<div class="contact-info-icon" style="background:#eef2ff;color:#4f46e5">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+					</div>
+					<div>
+						<strong>Email us</strong>
+						<p>support@invobill.in</p>
+					</div>
+				</div>
+				<div class="contact-info-card">
+					<div class="contact-info-icon" style="background:#d1fae5;color:#10b981">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+					</div>
+					<div>
+						<strong>Response time</strong>
+						<p>Within 1–2 business days</p>
+					</div>
+				</div>
+				<div class="contact-info-card">
+					<div class="contact-info-icon" style="background:#fef3c7;color:#d97706">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+					</div>
+					<div>
+						<strong>Location</strong>
+						<p>India (Remote-first team)</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="contact-faq">
+				<h3>Common questions</h3>
+				<div class="faq-item">
+					<button class="faq-q" onclick="this.parentNode.classList.toggle('faq-item--open')">
+						Is InvoBill really free?
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+					</button>
+					<p class="faq-a">Yes — create an account and start using all features immediately. No credit card, no trial period.</p>
+				</div>
+				<div class="faq-item">
+					<button class="faq-q" onclick="this.parentNode.classList.toggle('faq-item--open')">
+						Does it support GST filing?
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+					</button>
+					<p class="faq-a">InvoBill generates GST-compliant PDF invoices (CGST/SGST/IGST). Direct GSTN filing integration is on the roadmap.</p>
+				</div>
+				<div class="faq-item">
+					<button class="faq-q" onclick="this.parentNode.classList.toggle('faq-item--open')">
+						Can I export my data?
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+					</button>
+					<p class="faq-a">PDF invoices are available for download. CSV export and full data portability are coming soon.</p>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</section>
+
+{{ end }}

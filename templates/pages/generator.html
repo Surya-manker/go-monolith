@@ -1,0 +1,642 @@
+{{ define "title" }}GST Invoice Generator — InvoBill{{ end }}
+
+{{ define "content" }}
+
+<div class="gen-page">
+
+<!-- ── Page header ───────────────────────────────────────────── -->
+<div class="gen-header">
+	<div class="gen-header-inner">
+		<div>
+			<p class="land-eyebrow" style="color:#a5b4fc">Free tool</p>
+			<h1 class="gen-title">GST Invoice Generator</h1>
+			<p class="gen-subtitle">Fill in the details on the left — the preview updates live. Print or save as PDF when ready.</p>
+		</div>
+		<div class="gen-header-actions">
+			<button onclick="clearForm()" class="land-btn land-btn--ghost">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.6"/></svg>
+				Reset
+			</button>
+			<button onclick="window.print()" class="land-btn land-btn--primary">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+				Print / Save PDF
+			</button>
+		</div>
+	</div>
+</div>
+
+<!-- ── Two-panel layout ───────────────────────────────────────── -->
+<div class="gen-body">
+
+	<!-- LEFT: Form -->
+	<div class="gen-form-panel">
+
+		<!-- Seller -->
+		<div class="gen-section">
+			<h3 class="gen-section-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+				Seller (Your Business)
+			</h3>
+			<div class="gen-grid">
+				<label class="gen-label gen-wide">
+					<span>Business name</span>
+					<input type="text" id="sellerName" oninput="update()" placeholder="ABC Enterprises Pvt. Ltd." value="ABC Enterprises Pvt. Ltd.">
+				</label>
+				<label class="gen-label">
+					<span>GSTIN</span>
+					<input type="text" id="sellerGSTIN" oninput="update()" placeholder="27AABCU9603R1ZX" maxlength="15" value="27AABCU9603R1ZX">
+				</label>
+				<label class="gen-label">
+					<span>Phone</span>
+					<input type="text" id="sellerPhone" oninput="update()" placeholder="+91 98765 43210" value="+91 98765 43210">
+				</label>
+				<label class="gen-label gen-wide">
+					<span>Address</span>
+					<input type="text" id="sellerAddr" oninput="update()" placeholder="123, Business Park, Mumbai, MH 400001" value="123, Business Park, Mumbai, MH 400001">
+				</label>
+				<label class="gen-label">
+					<span>Bank name</span>
+					<input type="text" id="bankName" oninput="update()" placeholder="HDFC Bank" value="HDFC Bank">
+				</label>
+				<label class="gen-label">
+					<span>Account No.</span>
+					<input type="text" id="bankAccount" oninput="update()" placeholder="50100123456789" value="50100123456789">
+				</label>
+				<label class="gen-label">
+					<span>IFSC</span>
+					<input type="text" id="bankIFSC" oninput="update()" placeholder="HDFC0001234" value="HDFC0001234">
+				</label>
+			</div>
+		</div>
+
+		<!-- Invoice details -->
+		<div class="gen-section">
+			<h3 class="gen-section-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+				Invoice Details
+			</h3>
+			<div class="gen-grid">
+				<label class="gen-label">
+					<span>Invoice No.</span>
+					<input type="text" id="invNumber" oninput="update()" value="INV-2025-001">
+				</label>
+				<label class="gen-label">
+					<span>Invoice date</span>
+					<input type="date" id="invDate" oninput="update()">
+				</label>
+				<label class="gen-label">
+					<span>Due date</span>
+					<input type="date" id="invDue" oninput="update()">
+				</label>
+				<label class="gen-label">
+					<span>Place of supply</span>
+					<input type="text" id="placeSupply" oninput="update()" placeholder="Maharashtra" value="Maharashtra">
+				</label>
+			</div>
+		</div>
+
+		<!-- Buyer -->
+		<div class="gen-section">
+			<h3 class="gen-section-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+				Bill To (Buyer)
+			</h3>
+			<div class="gen-grid">
+				<label class="gen-label gen-wide">
+					<span>Customer name</span>
+					<input type="text" id="buyerName" oninput="update()" placeholder="XYZ Solutions Pvt. Ltd." value="XYZ Solutions Pvt. Ltd.">
+				</label>
+				<label class="gen-label">
+					<span>GSTIN (optional)</span>
+					<input type="text" id="buyerGSTIN" oninput="update()" placeholder="29AABCX1234R1ZY" maxlength="15">
+				</label>
+				<label class="gen-label">
+					<span>Email</span>
+					<input type="email" id="buyerEmail" oninput="update()" placeholder="accounts@xyz.in">
+				</label>
+				<label class="gen-label gen-wide">
+					<span>Address</span>
+					<input type="text" id="buyerAddr" oninput="update()" placeholder="456, Tech Park, Bengaluru, KA 560001">
+				</label>
+			</div>
+		</div>
+
+		<!-- Line items -->
+		<div class="gen-section">
+			<h3 class="gen-section-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+				Line Items
+			</h3>
+			<div class="gen-items" id="gen-items"></div>
+			<button onclick="addItem()" class="gen-add-btn">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+				Add line item
+			</button>
+		</div>
+
+		<!-- Notes -->
+		<div class="gen-section">
+			<h3 class="gen-section-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+				Notes &amp; Terms
+			</h3>
+			<label class="gen-label">
+				<span>Notes (visible on invoice)</span>
+				<textarea id="invNotes" oninput="update()" rows="3" placeholder="Thank you for your business. Payment due within 30 days.">Thank you for your business. Payment due within 30 days.</textarea>
+			</label>
+		</div>
+
+	</div>
+
+	<!-- RIGHT: Preview -->
+	<div class="gen-preview-panel">
+		<div class="gen-preview-sticky">
+			<div class="gen-preview-label">Live preview</div>
+			<div class="gen-invoice" id="gen-invoice">
+				<!-- Rendered by JS -->
+			</div>
+		</div>
+	</div>
+
+</div>
+</div>
+
+<style>
+/* ── Generator page ─────────────────────────────────────────── */
+.gen-page { min-height: calc(100vh - 60px); background: var(--bg); }
+
+.gen-header {
+	background: linear-gradient(160deg, #0a0d1a 0%, #0d1220 60%, #161d30 100%);
+	padding: 40px 32px 36px;
+	border-bottom: 1px solid rgba(99,102,241,.2);
+}
+.gen-header-inner {
+	max-width: 1300px;
+	margin: 0 auto;
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+.gen-title {
+	font-family: 'Plus Jakarta Sans', sans-serif;
+	font-size: clamp(24px, 3vw, 34px);
+	font-weight: 800;
+	color: #fff;
+	letter-spacing: -.03em;
+	margin-bottom: 6px;
+}
+.gen-subtitle { color: rgba(255,255,255,.55); font-size: 14px; }
+.gen-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.gen-body {
+	max-width: 1300px;
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: 420px 1fr;
+	gap: 0;
+	min-height: calc(100vh - 180px);
+}
+
+/* Form panel */
+.gen-form-panel {
+	border-right: 1px solid var(--border);
+	overflow-y: auto;
+	padding: 24px 20px 40px;
+	background: var(--surface);
+}
+.gen-section { margin-bottom: 28px; }
+.gen-section-title {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	color: var(--muted);
+	margin-bottom: 14px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--border);
+}
+.gen-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+.gen-label { display: grid; gap: 4px; }
+.gen-label span { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.gen-label em { color: #ef4444; font-style: normal; }
+.gen-label input, .gen-label textarea, .gen-label select {
+	background: var(--surface2);
+	border: 1.5px solid var(--border);
+	border-radius: 7px;
+	color: var(--text);
+	font: inherit;
+	font-size: 13px;
+	padding: 7px 10px;
+	width: 100%;
+	transition: border-color .15s, box-shadow .15s;
+}
+.gen-label input:focus, .gen-label textarea:focus, .gen-label select:focus {
+	border-color: #6366f1;
+	box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+	outline: none;
+}
+.gen-wide { grid-column: span 2; }
+
+/* Items table */
+.gen-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.gen-item {
+	display: grid;
+	grid-template-columns: 2fr 1fr 1fr 1fr 28px;
+	gap: 6px;
+	align-items: end;
+}
+.gen-item input, .gen-item select {
+	background: var(--surface2);
+	border: 1.5px solid var(--border);
+	border-radius: 7px;
+	color: var(--text);
+	font: inherit;
+	font-size: 12.5px;
+	padding: 6px 8px;
+	width: 100%;
+	transition: border-color .15s;
+}
+.gen-item input:focus, .gen-item select:focus {
+	border-color: #6366f1;
+	outline: none;
+}
+.gen-item-del {
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background .12s, color .12s;
+	flex-shrink: 0;
+}
+.gen-item-del:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+.gen-item-labels {
+	display: grid;
+	grid-template-columns: 2fr 1fr 1fr 1fr 28px;
+	gap: 6px;
+	margin-bottom: 4px;
+}
+.gen-item-labels span {
+	font-size: 10.5px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .06em;
+	color: var(--muted);
+	padding-left: 2px;
+}
+.gen-add-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: transparent;
+	border: 1.5px dashed var(--border);
+	border-radius: 8px;
+	color: #6366f1;
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 8px 14px;
+	width: 100%;
+	justify-content: center;
+	transition: background .15s, border-color .15s;
+	margin-top: 4px;
+}
+.gen-add-btn:hover { background: #eef2ff; border-color: #6366f1; }
+[data-theme="dark"] .gen-add-btn:hover { background: rgba(99,102,241,.1); }
+
+/* Preview panel */
+.gen-preview-panel { background: var(--bg); padding: 24px 28px 40px; overflow-y: auto; }
+.gen-preview-sticky { position: sticky; top: 24px; }
+.gen-preview-label {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .1em;
+	color: var(--muted);
+	margin-bottom: 12px;
+}
+
+/* Invoice preview */
+.gen-invoice {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 24px rgba(0,0,0,.08);
+	font-family: 'Inter', sans-serif;
+	font-size: 12px;
+	color: #111827;
+	max-width: 680px;
+}
+.inv-header {
+	background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+	padding: 24px 28px;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+}
+.inv-brand { color: #fff; }
+.inv-brand strong { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.inv-brand small  { display: block; font-size: 10px; opacity: .7; margin-top: 2px; }
+.inv-brand .inv-gstin { display: inline-block; background: rgba(255,255,255,.15); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 700; margin-top: 6px; letter-spacing: .05em; }
+.inv-title-block { text-align: right; color: #fff; }
+.inv-title-block h2 { font-size: 20px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+.inv-title-block p { font-size: 11px; opacity: .7; }
+.inv-title-block strong { display: block; font-size: 14px; font-weight: 700; }
+
+.inv-meta {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0;
+	border-bottom: 1px solid #e5e7eb;
+}
+.inv-meta-col { padding: 16px 20px; }
+.inv-meta-col:first-child { border-right: 1px solid #e5e7eb; }
+.inv-meta-col .inv-col-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #9ca3af; margin-bottom: 8px; }
+.inv-meta-col strong { display: block; font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.inv-meta-col p { font-size: 11px; color: #6b7280; line-height: 1.5; margin: 0; }
+.inv-meta-col .inv-gstin-tag { display: inline-block; background: #eef2ff; color: #4f46e5; border-radius: 4px; padding: 1px 6px; font-size: 9px; font-weight: 700; letter-spacing: .05em; margin-top: 3px; }
+
+.inv-table-wrap { overflow-x: auto; }
+.inv-table { width: 100%; border-collapse: collapse; }
+.inv-table th {
+	background: #f9fafb;
+	border-bottom: 1.5px solid #e5e7eb;
+	color: #9ca3af;
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: .08em;
+	padding: 9px 12px;
+	text-align: left;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+.inv-table th:last-child, .inv-table td:last-child { text-align: right; }
+.inv-table td {
+	border-bottom: 1px solid #f3f4f6;
+	color: #374151;
+	font-size: 11.5px;
+	padding: 10px 12px;
+	vertical-align: top;
+}
+.inv-table td strong { display: block; font-weight: 600; color: #111827; }
+.inv-table td small  { display: block; color: #9ca3af; font-size: 10px; }
+.inv-table tr:last-child td { border-bottom: none; }
+
+.inv-totals {
+	display: flex;
+	justify-content: flex-end;
+	border-top: 1.5px solid #e5e7eb;
+}
+.inv-totals-table { width: 240px; border-collapse: collapse; padding: 14px 20px; }
+.inv-totals-table td { padding: 4px 0; font-size: 11.5px; }
+.inv-totals-table td:last-child { text-align: right; font-weight: 600; }
+.inv-totals-table .inv-subtotal td { color: #6b7280; }
+.inv-totals-table .inv-tax td { color: #6b7280; }
+.inv-totals-table .inv-grand td {
+	border-top: 1.5px solid #e5e7eb;
+	color: #111827;
+	font-size: 14px;
+	font-weight: 800;
+	padding-top: 8px;
+}
+
+.inv-footer {
+	border-top: 1px solid #e5e7eb;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0;
+	padding: 0;
+}
+.inv-footer-col { padding: 14px 20px; }
+.inv-footer-col:first-child { border-right: 1px solid #e5e7eb; }
+.inv-footer-col .inv-col-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #9ca3af; margin-bottom: 6px; }
+.inv-footer-col p { font-size: 11px; color: #374151; line-height: 1.6; margin: 0; }
+.inv-notes { padding: 14px 20px; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+.inv-notes .inv-col-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #9ca3af; margin-bottom: 4px; }
+.inv-notes p { font-size: 11px; color: #6b7280; margin: 0; }
+
+/* Print styles */
+@media print {
+	.gen-header, .gen-form-panel, .gen-preview-label, .land-nav, .land-mobile-menu, .land-footer { display: none !important; }
+	.gen-body { display: block; }
+	.gen-page { background: #fff; }
+	.gen-preview-panel { padding: 0; background: #fff; }
+	.gen-preview-sticky { position: static; }
+	.gen-invoice { box-shadow: none; border: none; border-radius: 0; max-width: 100%; }
+	html:has(body.landing-body), body.landing-body { overflow: visible !important; height: auto !important; }
+}
+
+@media (max-width: 900px) {
+	.gen-body { grid-template-columns: 1fr; }
+	.gen-form-panel { border-right: none; border-bottom: 1px solid var(--border); }
+	.gen-preview-sticky { position: static; }
+}
+</style>
+
+<script>
+var items = [
+	{ desc: 'Web Development Services', hsn: '998314', qty: 1, rate: 50000, gst: 18 },
+	{ desc: 'UI/UX Design', hsn: '998312', qty: 2, rate: 15000, gst: 18 },
+];
+
+function v(id) {
+	var el = document.getElementById(id);
+	return el ? el.value.trim() : '';
+}
+
+function fmt(n) {
+	return 'Rs. ' + parseFloat(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function isIntraState() {
+	var sg = v('sellerGSTIN').substring(0, 2);
+	var bg = v('buyerGSTIN').substring(0, 2);
+	return sg && bg ? sg === bg : true;
+}
+
+function renderItems() {
+	var container = document.getElementById('gen-items');
+	if (!container) return;
+	container.innerHTML = '';
+
+	// Header row
+	var labels = document.createElement('div');
+	labels.className = 'gen-item-labels';
+	labels.innerHTML = '<span>Description</span><span>HSN</span><span>Qty × Rate</span><span>GST%</span><span></span>';
+	container.appendChild(labels);
+
+	items.forEach(function(item, i) {
+		var row = document.createElement('div');
+		row.className = 'gen-item';
+		row.innerHTML =
+			'<input type="text" placeholder="Description" value="' + escAttr(item.desc) + '" oninput="items[' + i + '].desc=this.value;renderPreview()">' +
+			'<input type="text" placeholder="HSN" value="' + escAttr(item.hsn) + '" oninput="items[' + i + '].hsn=this.value;renderPreview()" style="font-size:11px">' +
+			'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">' +
+				'<input type="number" placeholder="Qty" value="' + item.qty + '" min="0" step="0.01" oninput="items[' + i + '].qty=parseFloat(this.value)||0;renderPreview()">' +
+				'<input type="number" placeholder="Rate" value="' + item.rate + '" min="0" step="0.01" oninput="items[' + i + '].rate=parseFloat(this.value)||0;renderPreview()">' +
+			'</div>' +
+			'<select oninput="items[' + i + '].gst=parseFloat(this.value);renderPreview()">' +
+				[0,5,12,18,28].map(function(r){ return '<option value="' + r + '"' + (item.gst===r?' selected':'') + '>' + r + '%</option>'; }).join('') +
+			'</select>' +
+			'<button class="gen-item-del" onclick="removeItem(' + i + ')">' +
+				'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+			'</button>';
+		container.appendChild(row);
+	});
+}
+
+function addItem() {
+	items.push({ desc: '', hsn: '', qty: 1, rate: 0, gst: 18 });
+	renderItems();
+	renderPreview();
+}
+
+function removeItem(i) {
+	items.splice(i, 1);
+	renderItems();
+	renderPreview();
+}
+
+function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function esc(s)     { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderPreview() {
+	var intra   = isIntraState();
+	var subtotal = 0, taxTotal = 0;
+
+	var rows = items.map(function(it) {
+		var base    = it.qty * it.rate;
+		var taxAmt  = base * it.gst / 100;
+		var lineTotal = base + taxAmt;
+		subtotal  += base;
+		taxTotal  += taxAmt;
+		var taxLabel = intra
+			? 'CGST ' + (it.gst/2) + '% + SGST ' + (it.gst/2) + '%'
+			: 'IGST ' + it.gst + '%';
+		return '<tr>' +
+			'<td><strong>' + esc(it.desc || '—') + '</strong>' + (it.hsn ? '<small>HSN: ' + esc(it.hsn) + '</small>' : '') + '</td>' +
+			'<td style="text-align:right">' + it.qty + '</td>' +
+			'<td style="text-align:right">' + fmt(it.rate) + '</td>' +
+			'<td style="text-align:right;font-size:10px;color:#6b7280">' + esc(taxLabel) + '</td>' +
+			'<td>' + fmt(lineTotal) + '</td>' +
+		'</tr>';
+	}).join('');
+
+	var grand = subtotal + taxTotal;
+	var taxRows = intra
+		? '<tr class="inv-tax"><td>CGST</td><td>' + fmt(taxTotal/2) + '</td></tr><tr class="inv-tax"><td>SGST</td><td>' + fmt(taxTotal/2) + '</td></tr>'
+		: '<tr class="inv-tax"><td>IGST</td><td>' + fmt(taxTotal) + '</td></tr>';
+
+	var sellerGSTIN = v('sellerGSTIN');
+	var buyerGSTIN  = v('buyerGSTIN');
+	var invDate     = v('invDate')  || new Date().toLocaleDateString('en-IN');
+	var invDue      = v('invDue')   || '—';
+
+	document.getElementById('gen-invoice').innerHTML =
+		'<div class="inv-header">' +
+			'<div class="inv-brand">' +
+				'<strong>' + esc(v('sellerName') || 'Your Business') + '</strong>' +
+				'<small>' + esc(v('sellerAddr') || '') + '</small>' +
+				(sellerGSTIN ? '<span class="inv-gstin">GSTIN: ' + esc(sellerGSTIN) + '</span>' : '') +
+			'</div>' +
+			'<div class="inv-title-block">' +
+				'<h2>Tax Invoice</h2>' +
+				'<p>Invoice No.</p>' +
+				'<strong>' + esc(v('invNumber') || '—') + '</strong>' +
+			'</div>' +
+		'</div>' +
+
+		'<div class="inv-meta">' +
+			'<div class="inv-meta-col">' +
+				'<div class="inv-col-label">Bill To</div>' +
+				'<strong>' + esc(v('buyerName') || '—') + '</strong>' +
+				'<p>' + esc(v('buyerAddr') || '') + '</p>' +
+				(v('buyerEmail') ? '<p>' + esc(v('buyerEmail')) + '</p>' : '') +
+				(buyerGSTIN ? '<span class="inv-gstin-tag">GSTIN: ' + esc(buyerGSTIN) + '</span>' : '') +
+			'</div>' +
+			'<div class="inv-meta-col" style="text-align:right">' +
+				'<div class="inv-col-label">Invoice Info</div>' +
+				'<p><strong>Date:</strong> ' + esc(invDate) + '</p>' +
+				'<p><strong>Due:</strong> ' + esc(invDue) + '</p>' +
+				'<p><strong>Place of supply:</strong> ' + esc(v('placeSupply') || '—') + '</p>' +
+				'<p><strong>Tax type:</strong> ' + (intra ? 'CGST + SGST' : 'IGST') + '</p>' +
+			'</div>' +
+		'</div>' +
+
+		'<div class="inv-table-wrap">' +
+			'<table class="inv-table">' +
+				'<thead><tr>' +
+					'<th style="width:35%">Description</th>' +
+					'<th style="text-align:right">Qty</th>' +
+					'<th style="text-align:right">Rate</th>' +
+					'<th>Tax</th>' +
+					'<th>Amount</th>' +
+				'</tr></thead>' +
+				'<tbody>' + (rows || '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px">No items added</td></tr>') + '</tbody>' +
+			'</table>' +
+		'</div>' +
+
+		'<div class="inv-totals">' +
+			'<table class="inv-totals-table"><tbody>' +
+				'<tr class="inv-subtotal"><td>Subtotal</td><td>' + fmt(subtotal) + '</td></tr>' +
+				taxRows +
+				'<tr class="inv-grand"><td>Total</td><td>' + fmt(grand) + '</td></tr>' +
+			'</tbody></table>' +
+		'</div>' +
+
+		(v('bankName') ? '<div class="inv-footer">' +
+			'<div class="inv-footer-col">' +
+				'<div class="inv-col-label">Bank Details</div>' +
+				'<p><strong>' + esc(v('bankName')) + '</strong><br>' +
+				'A/C: ' + esc(v('bankAccount')) + '<br>' +
+				'IFSC: ' + esc(v('bankIFSC')) + '</p>' +
+			'</div>' +
+			'<div class="inv-footer-col" style="text-align:right">' +
+				'<div class="inv-col-label">Authorised Signatory</div>' +
+				'<div style="border-top:1px solid #e5e7eb;margin-top:30px;padding-top:6px;font-size:10px;color:#9ca3af">' + esc(v('sellerName') || 'Signature') + '</div>' +
+			'</div>' +
+		'</div>' : '') +
+
+		(v('invNotes') ? '<div class="inv-notes"><div class="inv-col-label">Notes</div><p>' + esc(v('invNotes')) + '</p></div>' : '');
+}
+
+function update() { renderPreview(); }
+
+function clearForm() {
+	['sellerName','sellerGSTIN','sellerPhone','sellerAddr','bankName','bankAccount','bankIFSC',
+	 'invNumber','invDate','invDue','placeSupply',
+	 'buyerName','buyerGSTIN','buyerEmail','buyerAddr','invNotes'].forEach(function(id) {
+		var el = document.getElementById(id);
+		if (el) el.value = '';
+	});
+	items = [{ desc: '', hsn: '', qty: 1, rate: 0, gst: 18 }];
+	renderItems();
+	renderPreview();
+}
+
+// Init
+document.getElementById('invDate').value = new Date().toISOString().split('T')[0];
+var due = new Date(); due.setDate(due.getDate() + 30);
+document.getElementById('invDue').value = due.toISOString().split('T')[0];
+renderItems();
+renderPreview();
+</script>
+
+{{ end }}

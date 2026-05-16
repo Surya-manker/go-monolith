@@ -13,8 +13,12 @@ func New(app *handlers.App) http.Handler {
 	// Static assets — no auth required.
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// ── Public landing page ──────────────────────────────────────────────────
+	// ── Public pages ─────────────────────────────────────────────────────────
 	mux.HandleFunc("GET /{$}", app.Home)
+	mux.HandleFunc("GET /about", app.About)
+	mux.HandleFunc("GET /contact", app.ContactPage)
+	mux.HandleFunc("POST /contact", app.ContactPost)
+	mux.HandleFunc("GET /generator", app.Generator)
 
 	// ── Auth routes (public, no CSRF needed) ────────────────────────────────
 	mux.HandleFunc("GET /login", app.LoginPage)
