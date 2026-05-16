@@ -10,7 +10,7 @@
 	</a>
 	<div class="land-nav-actions">
 		<button onclick="toggleTheme()" class="land-theme-btn" aria-label="Toggle theme">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
 		</button>
 		<a href="/login" class="land-btn land-btn--ghost">Sign in</a>
 		<a href="/register" class="land-btn land-btn--primary">Get started</a>
@@ -18,43 +18,51 @@
 </nav>
 
 <!-- ── Hero ─────────────────────────────────────────────────── -->
-<section class="land-hero">
-	<div class="land-hero-inner">
-		<div class="land-badge">GST-Ready · Multi-Role · Real-Time</div>
-		<h1 class="land-hero-h1">Run your business<br>from one place</h1>
-		<p class="land-hero-sub">
-			InvoBill brings inventory, billing, customers, vendors, and reports
-			together in a clean, fast interface — with GST-compliant PDF invoices
-			and role-based access built in.
-		</p>
-		<div class="land-hero-cta">
-			<a href="/register" class="land-btn land-btn--primary land-btn--lg">Create free account</a>
-			<a href="/login" class="land-btn land-btn--outline land-btn--lg">Sign in</a>
-		</div>
-	</div>
-	<!-- decorative grid -->
-	<div class="land-hero-grid" aria-hidden="true">
-		<div class="land-mockup">
-			<div class="land-mockup-bar">
-				<span></span><span></span><span></span>
+<div class="land-hero-section">
+	<div class="land-hero">
+		<div class="land-hero-inner">
+			<div class="land-badge">
+				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+				GST-Ready &middot; Multi-Role &middot; Real-Time
 			</div>
-			<div class="land-mockup-body">
-				<div class="land-mockup-row land-mockup-row--head"></div>
-				<div class="land-mockup-row"></div>
-				<div class="land-mockup-row land-mockup-row--sm"></div>
-				<div class="land-mockup-row"></div>
-				<div class="land-mockup-row land-mockup-row--sm"></div>
-				<div class="land-mockup-row"></div>
-				<div class="land-mockup-row land-mockup-row--sm"></div>
-				<div class="land-mockup-stat-row">
-					<div class="land-mockup-stat"></div>
-					<div class="land-mockup-stat land-mockup-stat--accent"></div>
-					<div class="land-mockup-stat"></div>
+			<h1 class="land-hero-h1">Run your business<br>from <em>one place</em></h1>
+			<p class="land-hero-sub">
+				InvoBill brings inventory, billing, customers, vendors, and reports
+				together in a clean, fast interface &mdash; with GST-compliant PDF invoices
+				and role-based access built in.
+			</p>
+			<div class="land-hero-cta">
+				<a href="/register" class="land-btn land-btn--primary land-btn--lg">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+					Create free account
+				</a>
+				<a href="/login" class="land-btn land-btn--outline land-btn--lg">Sign in</a>
+			</div>
+		</div>
+		<!-- decorative mockup -->
+		<div class="land-hero-grid" aria-hidden="true">
+			<div class="land-mockup">
+				<div class="land-mockup-bar">
+					<span></span><span></span><span></span>
+				</div>
+				<div class="land-mockup-body">
+					<div class="land-mockup-row land-mockup-row--head"></div>
+					<div class="land-mockup-row"></div>
+					<div class="land-mockup-row land-mockup-row--sm"></div>
+					<div class="land-mockup-row"></div>
+					<div class="land-mockup-row land-mockup-row--sm"></div>
+					<div class="land-mockup-row"></div>
+					<div class="land-mockup-row land-mockup-row--sm"></div>
+					<div class="land-mockup-stat-row">
+						<div class="land-mockup-stat"></div>
+						<div class="land-mockup-stat land-mockup-stat--accent"></div>
+						<div class="land-mockup-stat"></div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</section>
+</div>
 
 <!-- ── Stats bar ─────────────────────────────────────────────── -->
 <div class="land-stats">
@@ -84,7 +92,7 @@
 	<div class="land-section-inner">
 		<p class="land-eyebrow">Everything you need</p>
 		<h2 class="land-section-h2">Built for growing businesses</h2>
-		<p class="land-section-sub">From first invoice to full operations — InvoBill scales with you.</p>
+		<p class="land-section-sub">From first invoice to full operations — InvoBill scales with you every step of the way.</p>
 
 		<div class="land-features">
 
@@ -145,6 +153,7 @@
 	<div class="land-section-inner">
 		<p class="land-eyebrow">All in one system</p>
 		<h2 class="land-section-h2">Every module you need</h2>
+		<p class="land-section-sub">One unified platform — no integrations, no juggling multiple tools.</p>
 		<div class="land-modules-grid">
 			{{ range .Modules }}
 			<div class="land-module-chip">
@@ -160,9 +169,12 @@
 <section class="land-cta-section">
 	<div class="land-cta-inner">
 		<h2>Ready to get started?</h2>
-		<p>Create your account in seconds — no credit card required.</p>
+		<p>Create your account in seconds — no credit card required. Start managing your business smarter today.</p>
 		<div class="land-hero-cta">
-			<a href="/register" class="land-btn land-btn--white land-btn--lg">Create free account</a>
+			<a href="/register" class="land-btn land-btn--white land-btn--lg">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+				Create free account
+			</a>
 			<a href="/login" class="land-btn land-btn--outline-white land-btn--lg">Sign in</a>
 		</div>
 	</div>
