@@ -14,7 +14,6 @@
 	<h2 style="margin-bottom:14px">Add Customer</h2>
 	<form class="grid-form" hx-post="/crm/customers" hx-target="#crm-cust-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
 		<label><span>Name *</span><input type="text" name="name" required maxlength="255" placeholder="Customer company/person name"></label>
-		<label><span>Customer Code</span><input type="text" name="customer_code" placeholder="Auto if empty"></label>
 		<label><span>GSTIN</span><input type="text" name="gstin" maxlength="20"></label>
 		<label><span>PAN</span><input type="text" name="pan" maxlength="20"></label>
 		<label><span>Contact Person</span><input type="text" name="contact_person"></label>

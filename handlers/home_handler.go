@@ -24,9 +24,29 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 
 	a.Renderer.Landing(w, "home.html", HomeData{
 		Modules: []string{
-			"Products", "Customers", "Vendors", "Categories",
-			"Invoices", "Purchase Orders", "Payments", "Credit Notes",
-			"Accounts", "Jobs", "Stock Logs", "Audit Logs", "Reports",
+			// Billing & Sales
+			"GST Invoices (PDF)", "Credit Notes", "Payments Tracking", "Invoice Email",
+			// Inventory
+			"Products & Catalogue", "Warehouse Management", "Stock Transfers", "Barcode Generator",
+			"Batch & Lot Tracking", "Expiry Date Alerts", "Stock Adjustments", "Dead Stock Reports",
+			// CRM
+			"CRM Dashboard", "Customer Profiles", "Quotations", "Sales Orders",
+			"Delivery Challans", "Customer Payments",
+			// Procurement
+			"Supplier Management", "Purchase Orders", "Goods Receipt Note (GRN)", "Supplier Payments", "Reorder Alerts",
+			// Finance
+			"Expense Tracking", "Bank Accounts", "Cash Ledger", "Profit & Loss",
+			"Cashflow Statement", "GST Summary Report",
+			// POS
+			"POS Terminal", "POS Sales History", "POS Receipt Printing",
+			// Returns
+			"Sales Returns", "Purchase Returns",
+			// Reports
+			"Stock Valuation", "Stock Movement", "Sales Analytics", "Low Stock Report",
+			"Warehouse Inventory", "Returns Analytics",
+			// Platform
+			"Role-Based Access (5 roles)", "Audit Log", "REST API", "Dark Mode",
+			"Live Dashboard (SSE)", "Multi-Warehouse", "PWA (Installable App)", "Backup & Restore",
 		},
 	})
 }

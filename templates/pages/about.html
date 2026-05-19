@@ -87,32 +87,42 @@
 			<div class="about-tech-card">
 				<span class="about-tech-badge" style="background:#e0f2fe;color:#0284c7">Backend</span>
 				<strong>Go 1.25</strong>
-				<p>Standard library <code>net/http</code> — no frameworks, just fast, typed, compiled Go.</p>
+				<p>Standard library <code>net/http</code> — no frameworks, just fast, typed, compiled Go with instant startup.</p>
 			</div>
 			<div class="about-tech-card">
 				<span class="about-tech-badge" style="background:#fef3c7;color:#d97706">Frontend</span>
-				<strong>HTMX 2.0</strong>
-				<p>Hypermedia-driven UI. Partial page swaps without writing JavaScript components.</p>
+				<strong>HTMX 2.0 + Vanilla JS</strong>
+				<p>Hypermedia-driven UI. Partial page swaps, live updates via SSE — zero JavaScript framework bloat.</p>
 			</div>
 			<div class="about-tech-card">
 				<span class="about-tech-badge" style="background:#d1fae5;color:#059669">Database</span>
-				<strong>MySQL</strong>
-				<p>Raw SQL queries via <code>go-sql-driver/mysql</code>. Each model owns its own migration.</p>
+				<strong>MySQL 8+</strong>
+				<p>Raw SQL via <code>go-sql-driver/mysql</code>. Schema auto-migrates on startup. Each store owns its own schema.</p>
 			</div>
 			<div class="about-tech-card">
 				<span class="about-tech-badge" style="background:#ede9fe;color:#7c3aed">PDF</span>
 				<strong>go-pdf/fpdf</strong>
-				<p>Server-side GST invoice PDF generation — no browser, no headless Chrome.</p>
+				<p>Server-side GST invoice PDF generation with CGST/SGST/IGST layout — no browser, no headless Chrome.</p>
 			</div>
 			<div class="about-tech-card">
-				<span class="about-tech-badge" style="background:#fee2e2;color:#dc2626">Auth</span>
-				<strong>bcrypt + sessions</strong>
-				<p>Password hashing with bcrypt, 64-char hex session tokens stored in MySQL.</p>
+				<span class="about-tech-badge" style="background:#fee2e2;color:#dc2626">Auth &amp; Security</span>
+				<strong>bcrypt · sessions · CSRF</strong>
+				<p>Bcrypt password hashing, MySQL session tokens, CSRF on every form, 60 rps rate limiting, panic recovery.</p>
 			</div>
 			<div class="about-tech-card">
 				<span class="about-tech-badge" style="background:#f3f4f6;color:#374151">Templates</span>
-				<strong>html/template</strong>
-				<p>Go's built-in, XSS-safe HTML templating. Templates parsed from disk on every request.</p>
+				<strong>html/template (SSR)</strong>
+				<p>Go's built-in XSS-safe templating. Parsed from disk on every request — HTML changes are live without restart.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#d1fae5;color:#059669">Charts</span>
+				<strong>Chart.js 4</strong>
+				<p>Interactive bar charts, doughnut charts, and sparklines on reports and dashboard pages.</p>
+			</div>
+			<div class="about-tech-card">
+				<span class="about-tech-badge" style="background:#e0f2fe;color:#0284c7">PWA</span>
+				<strong>Service Worker</strong>
+				<p>Installable as an app on Android and desktop. Offline shell with cache-first asset serving.</p>
 			</div>
 		</div>
 	</div>

@@ -1,4 +1,4 @@
-{{ define "title" }}New GRN{{ end }}
+﻿{{ define "title" }}New GRN{{ end }}
 
 {{ define "content" }}
 <section class="page-head">
@@ -75,13 +75,10 @@
 						<span>Damaged Qty</span>
 						<input type="number" name="damaged_qty[]" min="0" value="0" style="padding:5px 8px">
 					</label>
-					<label style="flex:1;min-width:100px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
-						<span>Batch Number</span>
-						<input type="text" name="batch_number[]" placeholder="e.g. BATCH-001" style="padding:5px 8px">
-					</label>
-					<label style="flex:.8;min-width:90px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
-						<span>Lot Number</span>
-						<input type="text" name="lot_number[]" style="padding:5px 8px">
+					<label style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Lot / Ref No. <em style="font-style:normal;color:var(--muted)">(optional)</em></span>
+						<input type="text" name="lot_number[]" placeholder="Lot or reference" style="padding:5px 8px">
+						<input type="hidden" name="batch_number[]" value="">
 					</label>
 					<label style="flex:.8;min-width:110px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
 						<span>Mfg Date</span>
@@ -120,9 +117,10 @@
 						<span>Damaged Qty</span>
 						<input type="number" name="damaged_qty[]" min="0" value="0" style="padding:5px 8px">
 					</label>
+					<input type="hidden" name="batch_number[]" value="">
 					<label style="flex:1;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
-						<span>Batch Number</span>
-						<input type="text" name="batch_number[]" placeholder="Optional" style="padding:5px 8px">
+						<span>Lot / Ref No. <em style="font-style:normal;color:var(--muted)">(optional)</em></span>
+						<input type="text" name="lot_number[]" placeholder="Lot or supplier ref" style="padding:5px 8px">
 					</label>
 					<label style="flex:.8;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
 						<span>Expiry Date</span>
@@ -132,7 +130,6 @@
 						<span>Unit Price</span>
 						<input type="number" name="unit_price[]" step="0.01" value="0" style="padding:5px 8px">
 					</label>
-					<input type="hidden" name="lot_number[]" value="">
 					<input type="hidden" name="mfg_date[]" value="">
 					<button type="button" class="link-button danger" onclick="this.closest('.grn-item-row').remove()" style="align-self:flex-end">✕</button>
 				</div>

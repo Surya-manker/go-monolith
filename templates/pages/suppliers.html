@@ -14,7 +14,6 @@
 	<h2 style="margin-bottom:14px">Add Supplier</h2>
 	<form class="grid-form" hx-post="/suppliers" hx-target="#suppliers-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
 		<label><span>Name *</span><input type="text" name="name" required maxlength="255" placeholder="Supplier company name"></label>
-		<label><span>Supplier Code</span><input type="text" name="supplier_code" placeholder="Auto-generated if empty"></label>
 		<label><span>GSTIN</span><input type="text" name="gstin" maxlength="20" placeholder="22AAAAA0000A1Z5"></label>
 		<label><span>PAN</span><input type="text" name="pan" maxlength="20" placeholder="AAAAA9999A"></label>
 		<label><span>Contact Person</span><input type="text" name="contact_person" placeholder="Primary contact name"></label>

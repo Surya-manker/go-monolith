@@ -334,7 +334,9 @@ func (s *BatchStore) Get(id, bizID int) (*Batch, error) {
 
 func (s *BatchStore) Create(b *Batch) (*Batch, error) {
 	if b.BatchNumber == "" {
-		b.BatchNumber = fmt.Sprintf("BATCH-%d-%d", b.ProductID, time.Now().Unix())
+		var count int
+		_ = s.db.QueryRow(`SELECT COUNT(*) FROM batches WHERE business_id=?`, b.BusinessID).Scan(&count)
+		b.BatchNumber = fmt.Sprintf("BATCH-%s-%04d", time.Now().Format("2006"), count+1)
 	}
 	res, err := s.db.Exec(
 		`INSERT INTO batches
@@ -501,7 +503,9 @@ func (s *BatchStore) AddToBatchTx(tx *sql.Tx, batchID, qty int, changeType, note
 // Called by the GRN service to create batches inside the same stock-update TX.
 func (s *BatchStore) CreateBatchInTx(tx *sql.Tx, b *Batch) (int64, error) {
 	if b.BatchNumber == "" {
-		b.BatchNumber = fmt.Sprintf("BATCH-%d-%d", b.ProductID, time.Now().Unix())
+		var count int
+		_ = tx.QueryRow(`SELECT COUNT(*) FROM batches WHERE business_id=?`, b.BusinessID).Scan(&count)
+		b.BatchNumber = fmt.Sprintf("BATCH-%s-%04d", time.Now().Format("2006"), count+1)
 	}
 	res, err := tx.Exec(
 		`INSERT INTO batches (business_id, product_id, warehouse_id, batch_number, lot_number,

@@ -43,13 +43,15 @@
 {{ define "crud-form-create" }}
 <form class="grid-form" hx-post="{{ .Config.Path }}" hx-target="#crud-table" hx-swap="innerHTML">
 	{{ range .Config.Fields }}
+		{{/* Skip "number" in create forms — it is auto-generated on the server */}}
+		{{ if eq .Name "number" }}{{ else }}
 		<label>
 			<span>{{ .Label }}</span>
 			<input name="{{ .Name }}" type="{{ .Type }}" value="{{ .Value }}"
 				placeholder="{{ orStr (index $.Config.Placeholders .Name) .Label }}"
-				{{ if eq .Name "name" }}required{{ end }}
-				{{ if eq .Name "number" }}required{{ end }}>
+				{{ if eq .Name "name" }}required{{ end }}>
 		</label>
+		{{ end }}
 	{{ end }}
 	<button class="button" type="submit">Save</button>
 </form>

@@ -38,12 +38,9 @@
 			</select>
 		</label>
 		<label>
-			<span>Batch Number</span>
-			<input type="text" name="batch_number" placeholder="e.g. BATCH-2025-001 (auto if empty)">
-		</label>
-		<label>
-			<span>Lot Number</span>
-			<input type="text" name="lot_number" placeholder="e.g. LOT-A">
+			<span>Lot / Reference No. <small style="color:var(--muted);font-weight:400">(optional)</small></span>
+			<input type="text" name="lot_number" placeholder="e.g. LOT-A, Supplier ref.">
+			<input type="hidden" name="batch_number" value="">
 		</label>
 		<label>
 			<span>Qty Received *</span>

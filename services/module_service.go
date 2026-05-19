@@ -3,9 +3,18 @@ package services
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"go-monolith/models"
 )
+
+// numberPrefixes lists modules that have an auto-generated "number" field.
+// When the user submits an empty number, we generate one automatically.
+var numberPrefixes = map[string]string{
+	"invoices":       "INV",
+	"purchase-orders": "PO",
+	"credit-notes":   "CN",
+}
 
 type Field struct {
 	Name        string
@@ -218,6 +227,14 @@ func (s *ModuleService) Create(key string, values map[string]string, businessID 
 	if err != nil {
 		return err
 	}
+
+	// Auto-generate "number" for modules like invoices, purchase-orders, credit-notes
+	// when the user leaves the field blank.
+	if prefix, ok := numberPrefixes[key]; ok && values["number"] == "" {
+		count, _ := s.store.Count(config.Table, businessID)
+		values["number"] = fmt.Sprintf("%s-%s-%04d", prefix, time.Now().Format("2006"), count+1)
+	}
+
 	if values["name"] == "" && values["number"] == "" {
 		return errors.New("primary field is required")
 	}
