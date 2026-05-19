@@ -1,0 +1,53 @@
+{{ define "title" }}Delivery Challans{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>Delivery Challans</h1>
+		<p class="muted">Track dispatches and deliveries. Creating a challan deducts warehouse stock.</p>
+	</div>
+</section>
+
+<section class="panel">
+	{{ if .Challans }}
+	<table>
+		<thead>
+			<tr><th>Challan #</th><th>Order</th><th>Customer</th><th>Warehouse</th><th>Courier</th><th>Status</th><th>Dispatched</th><th class="actions">Actions</th></tr>
+		</thead>
+		<tbody>
+			{{ range .Challans }}
+			<tr>
+				<td class="mono"><strong>{{ .ChallanNumber }}</strong></td>
+				<td class="mono">{{ if .OrderNumber }}<a href="/crm/orders/view?id={{ .OrderID }}">{{ .OrderNumber }}</a>{{ else }}—{{ end }}</td>
+				<td>{{ .CustomerName }}</td>
+				<td>{{ .WarehouseName }}</td>
+				<td>{{ if .CourierName }}{{ .CourierName }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td>
+					{{ if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+					{{ else if eq .Status "dispatched" }}<span class="badge badge--warning">Dispatched</span>
+					{{ else if eq .Status "delivered" }}<span class="badge badge--active">Delivered</span>
+					{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				</td>
+				<td class="muted" style="font-size:12px">{{ if .DispatchDate }}{{ .DispatchDate.Format "02 Jan 2006" }}{{ else }}—{{ end }}</td>
+				<td class="actions">
+					<a class="link-button" href="/crm/delivery/view?id={{ .ID }}">View</a>
+					{{ if eq .Status "dispatched" }}
+					<form method="POST" action="/crm/delivery/delivered?id={{ .ID }}" style="display:inline">
+						<button class="link-button" type="submit">Mark Delivered</button>
+					</form>
+					{{ end }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">🚚</p>
+		<p style="font-weight:600">No delivery challans yet</p>
+		<p class="muted">Create one from a confirmed <a href="/crm/orders">Sales Order</a>.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

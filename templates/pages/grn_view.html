@@ -1,0 +1,79 @@
+{{ define "title" }}{{ .GRN.GRNNumber }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">GRN</p>
+		<h1>{{ .GRN.GRNNumber }}</h1>
+		<p class="muted">{{ .GRN.SupplierName }} · {{ .GRN.WarehouseName }} · {{ .GRN.TotalReceived }} units received</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<button class="button button--muted" onclick="window.print()">🖨 Print</button>
+		<a class="button button--muted" href="/procurement/grn">← All GRNs</a>
+	</div>
+</section>
+
+<section class="panel">
+	<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px">
+		<div>
+			<p style="font-size:12px;color:var(--text-muted)">Supplier</p>
+			<p style="font-weight:600">{{ if .GRN.SupplierName }}{{ .GRN.SupplierName }}{{ else }}Direct Receive{{ end }}</p>
+		</div>
+		<div>
+			<p style="font-size:12px;color:var(--text-muted)">PO Reference</p>
+			<p>{{ if .GRN.PONumber }}<a class="mono" href="/procurement/orders/view?id={{ .GRN.OrderID }}">{{ .GRN.PONumber }}</a>{{ else }}—{{ end }}</p>
+		</div>
+		<div>
+			<p style="font-size:12px;color:var(--text-muted)">Warehouse</p>
+			<p>{{ .GRN.WarehouseName }}</p>
+		</div>
+		<div>
+			<p style="font-size:12px;color:var(--text-muted)">Date Received</p>
+			<p>{{ .GRN.CreatedAt.Format "02 Jan 2006 15:04" }}</p>
+		</div>
+		{{ if .GRN.Notes }}
+		<div class="wide">
+			<p style="font-size:12px;color:var(--text-muted)">Notes</p>
+			<p>{{ .GRN.Notes }}</p>
+		</div>
+		{{ end }}
+	</div>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th><th>SKU</th>
+				<th style="text-align:right">Received</th>
+				<th style="text-align:right">Damaged</th>
+				<th>Batch #</th>
+				<th>Expiry</th>
+				<th style="text-align:right">Unit Cost</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .GRN.Items }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right;color:#059669;font-weight:700">{{ .ReceivedQty }}</td>
+				<td style="text-align:right">
+					{{ if gt .DamagedQty 0 }}<span class="badge badge--warning">{{ .DamagedQty }}</span>{{ else }}—{{ end }}
+				</td>
+				<td class="mono">{{ if .BatchNumber }}{{ .BatchNumber }}{{ else }}—{{ end }}</td>
+				<td>{{ if .ExpiryDate }}{{ .ExpiryDate.Format "02 Jan 2006" }}{{ else }}—{{ end }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .UnitPrice }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+		<tfoot>
+			<tr style="font-weight:700">
+				<td colspan="2">Total</td>
+				<td style="text-align:right;color:#059669">{{ .GRN.TotalReceived }}</td>
+				<td colspan="4"></td>
+			</tr>
+		</tfoot>
+	</table>
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child{display:none!important} }</style>
+{{ end }}

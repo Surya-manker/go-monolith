@@ -1,0 +1,163 @@
+{{ define "title" }}New GRN{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>Goods Receipt Note</h1>
+		<p class="muted">Record stock received from supplier. Optionally link to an approved PO.</p>
+	</div>
+	<a class="button button--muted" href="/procurement/grn">← All GRNs</a>
+</section>
+
+{{ if .Order }}
+<div class="alert" style="background:#dbeafe;border-color:#93c5fd;padding:12px 16px;border-radius:8px;margin-bottom:0">
+	<strong>Linked PO: {{ .Order.PONumber }}</strong> — {{ .Order.SupplierName }} — Rs. {{ printf "%.2f" .Order.GrandTotal }}
+</div>
+{{ end }}
+
+<section class="panel" style="max-width:1100px">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<form method="POST" action="/procurement/grn" id="grn-form">
+		{{ if .Order }}
+		<input type="hidden" name="order_id" value="{{ .Order.ID }}">
+		{{ end }}
+		<div class="grid-form" style="margin-bottom:16px">
+			<label>
+				<span>Supplier *</span>
+				<select name="supplier_id" required>
+					<option value="">— Select supplier —</option>
+					{{ range .Suppliers }}
+					<option value="{{ .ID }}" {{ if and $.Order (eq $.Order.SupplierID .ID) }}selected{{ end }}>
+						{{ .Name }}
+					</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Receiving Warehouse *</span>
+				<select name="warehouse_id" required>
+					<option value="">— Select warehouse —</option>
+					{{ range .Warehouses }}
+					<option value="{{ .ID }}"
+						{{ if and $.Order (eq $.Order.WarehouseID .ID) }}selected{{ end }}
+						{{ if and (not $.Order) .IsDefault }}selected{{ end }}>
+						{{ .Name }}{{ if .IsDefault }} ★{{ end }}
+					</option>
+					{{ end }}
+				</select>
+			</label>
+			<label class="wide">
+				<span>Notes</span>
+				<input type="text" name="notes" placeholder="Delivery reference, vehicle number, etc.">
+			</label>
+		</div>
+
+		<h3 style="margin-bottom:10px">Items Received</h3>
+		<div id="grn-items">
+			{{ if .Order }}
+			{{/* Pre-fill items from PO */}}
+			{{ range .Order.Items }}
+			<div class="grn-item-row" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+				<input type="hidden" name="order_item_id[]" value="{{ .ID }}">
+				<input type="hidden" name="product_id[]" value="{{ .ProductID }}">
+				<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+					<div style="flex:2;min-width:160px">
+						<label style="font-size:12px;color:var(--text-muted);display:block">Product</label>
+						<strong>{{ .ProductName }}</strong> <span class="mono" style="font-size:12px">{{ .SKU }}</span>
+						<p class="muted" style="font-size:11px">Ordered: {{ .Quantity }} · Received: {{ .ReceivedQty }} · Pending: {{ .PendingQty }}</p>
+					</div>
+					<label style="flex:.7;min-width:80px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Received Qty</span>
+						<input type="number" name="received_qty[]" min="0" value="{{ .PendingQty }}" style="padding:5px 8px">
+					</label>
+					<label style="flex:.7;min-width:80px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Damaged Qty</span>
+						<input type="number" name="damaged_qty[]" min="0" value="0" style="padding:5px 8px">
+					</label>
+					<label style="flex:1;min-width:100px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Batch Number</span>
+						<input type="text" name="batch_number[]" placeholder="e.g. BATCH-001" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;min-width:90px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Lot Number</span>
+						<input type="text" name="lot_number[]" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;min-width:110px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Mfg Date</span>
+						<input type="date" name="mfg_date[]" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;min-width:110px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Expiry Date</span>
+						<input type="date" name="expiry_date[]" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;min-width:100px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Unit Price</span>
+						<input type="number" name="unit_price[]" step="0.01" value="{{ printf "%.2f" .UnitPrice }}" style="padding:5px 8px">
+					</label>
+				</div>
+			</div>
+			{{ end }}
+			{{ else }}
+			{{/* Direct receive (no PO) — one empty row */}}
+			<div class="grn-item-row" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+				<input type="hidden" name="order_item_id[]" value="0">
+				<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+					<label style="flex:2;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Product *</span>
+						<select name="product_id[]" required style="padding:5px 8px">
+							<option value="">— Select —</option>
+							{{ range .Products }}
+							<option value="{{ .ID }}">{{ .Name }} ({{ .SKU }})</option>
+							{{ end }}
+						</select>
+					</label>
+					<label style="flex:.7;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Received Qty</span>
+						<input type="number" name="received_qty[]" min="0" value="0" style="padding:5px 8px">
+					</label>
+					<label style="flex:.7;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Damaged Qty</span>
+						<input type="number" name="damaged_qty[]" min="0" value="0" style="padding:5px 8px">
+					</label>
+					<label style="flex:1;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Batch Number</span>
+						<input type="text" name="batch_number[]" placeholder="Optional" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Expiry Date</span>
+						<input type="date" name="expiry_date[]" style="padding:5px 8px">
+					</label>
+					<label style="flex:.8;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+						<span>Unit Price</span>
+						<input type="number" name="unit_price[]" step="0.01" value="0" style="padding:5px 8px">
+					</label>
+					<input type="hidden" name="lot_number[]" value="">
+					<input type="hidden" name="mfg_date[]" value="">
+					<button type="button" class="link-button danger" onclick="this.closest('.grn-item-row').remove()" style="align-self:flex-end">✕</button>
+				</div>
+			</div>
+			{{ end }}
+		</div>
+
+		{{ if not .Order }}
+		<button type="button" class="button button--muted button--sm" style="margin:8px 0" onclick="addGRNRow()">+ Add Item</button>
+		{{ end }}
+
+		<div style="margin-top:16px;display:flex;gap:8px">
+			<button class="button" type="submit">Submit GRN & Update Stock</button>
+			<a class="button button--muted" href="/procurement/grn">Cancel</a>
+		</div>
+	</form>
+</section>
+
+<script>
+function addGRNRow() {
+	var first = document.querySelector('#grn-items .grn-item-row');
+	var clone = first.cloneNode(true);
+	clone.querySelectorAll('input:not([type=hidden])').forEach(function(i) { i.value = i.type === 'number' ? '0' : ''; });
+	clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+	document.getElementById('grn-items').appendChild(clone);
+}
+</script>
+{{ end }}

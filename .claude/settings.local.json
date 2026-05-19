@@ -16,7 +16,16 @@
       "Bash(powershell -Command \"Get-Item static/css/app.css, templates/layouts/base.html, templates/layouts/landing.html, templates/pages/home.html | Select-Object Name, Length, LastWriteTime\")",
       "PowerShell(go build *)",
       "Bash(claude doctor *)",
-      "PowerShell(claude doctor *)"
+      "PowerShell(claude doctor *)",
+      "Bash(del handlers\\\\accounting_handler.go handlers\\\\payroll_handler.go handlers\\\\gst_handler.go services\\\\accounting_service.go services\\\\payroll_service.go services\\\\gst_report_service.go models\\\\accounting.go models\\\\payroll.go)",
+      "Bash(grep -n \"range.*\\\\\\\\.Form\\\\|for key.*value\" handlers/*.go)",
+      "Bash(Select-String -Pattern \"\\(models|handlers|routes|services\\)\")",
+      "Bash(xargs grep -l \"cron\\\\|Ticker\\\\|scheduler\\\\|background.*job\")",
+      "Skill(update-config)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(python3 *)"
     ]
   }
 }

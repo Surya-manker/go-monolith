@@ -1,0 +1,21 @@
+package middleware
+
+import (
+	"log"
+	"net/http"
+	"runtime/debug"
+)
+
+// Recovery catches panics in downstream handlers, logs a stack trace, and
+// returns 500 instead of crashing the process.
+func Recovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("[PANIC] %v\n%s", err, debug.Stack())
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}

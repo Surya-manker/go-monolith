@@ -1,0 +1,154 @@
+{{ define "title" }}POS Terminal{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Sales</p>
+		<h1>POS Terminal</h1>
+		<p class="muted">Fast billing — scan a barcode or search by name/SKU.</p>
+	</div>
+	<div style="display:flex;gap:8px;align-items:center">
+		{{ if .Warehouses }}
+		<select id="active-warehouse"
+			style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:13px"
+			onchange="updateWarehouseID(this.value)">
+			{{ range .Warehouses }}
+			<option value="{{ .ID }}" {{ if eq $.WarehouseID .ID }}selected{{ end }}>
+				{{ .Name }}{{ if .IsDefault }} ★{{ end }}
+			</option>
+			{{ end }}
+		</select>
+		{{ end }}
+		<a class="button button--muted button--sm" href="/pos/sales">Sales History</a>
+	</div>
+</section>
+
+{{/* Today's stats strip */}}
+<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+	<div class="metric-card" style="flex:1;min-width:160px;padding:12px 16px">
+		<span class="metric-label">Today's Sales</span>
+		<strong>{{ .TodayCount }}</strong>
+	</div>
+	<div class="metric-card" style="flex:1;min-width:160px;padding:12px 16px">
+		<span class="metric-label">Today's Revenue</span>
+		<strong style="color:var(--brand-600)">Rs. {{ printf "%.2f" .TodayTotal }}</strong>
+	</div>
+</div>
+
+{{/* ── Main POS layout ── */}}
+<div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
+
+	{{/* ── Left: Search + Results ── */}}
+	<div>
+		{{/* Barcode/search input — auto-focus, scanner-ready */}}
+		<div class="panel" style="padding:12px 16px;margin-bottom:0">
+			<input
+				id="barcode-input"
+				type="search"
+				name="q"
+				autocomplete="off"
+				autofocus
+				placeholder="Scan barcode or type product name / SKU…"
+				style="width:100%;font-size:16px;padding:10px 14px;border-radius:8px;border:2px solid var(--brand-300)"
+				hx-get="/pos/search"
+				hx-trigger="keyup changed delay:200ms, barcode-search"
+				hx-target="#pos-search-results"
+				hx-swap="innerHTML"
+				hx-include="this"
+				hx-vals='{"warehouse_id": "{{ .WarehouseID }}"}'>
+		</div>
+
+		<div id="pos-search-results" style="margin-top:8px">
+			{{/* Products grid pre-loaded */}}
+			<div class="pos-products-grid">
+				{{ range .Products }}
+				<div class="pos-product-card"
+					onclick="posAddProduct({{ .ID }}, {{ printf `%.2f` .Price }}, {{ printf `%.2f` .TaxRate }}, {{ printf "%q" .Name }}, {{ printf "%q" .SKU }}, {{ printf "%q" .Barcode }})">
+					<div class="pos-product-name">{{ .Name }}</div>
+					<div class="pos-product-sku">{{ .SKU }}</div>
+					{{ if .Barcode }}<div class="pos-product-barcode">{{ .Barcode }}</div>{{ end }}
+					<div class="pos-product-price">Rs. {{ printf "%.2f" .Price }}</div>
+					{{ if le .Stock 0 }}
+					<div class="badge badge--danger" style="margin-top:4px;font-size:10px">Out of Stock</div>
+					{{ else }}
+					<div class="pos-product-stock">{{ .Stock }} in stock</div>
+					{{ end }}
+				</div>
+				{{ else }}
+				<p class="muted" style="padding:16px">No products. <a href="/products">Add products</a> first.</p>
+				{{ end }}
+			</div>
+		</div>
+	</div>
+
+	{{/* ── Right: Cart ── */}}
+	<div id="pos-cart-panel">
+		{{ template "pos_cart" . }}
+	</div>
+
+</div>
+
+<script>
+var _whID = {{ .WarehouseID }};
+
+function updateWarehouseID(id) {
+	_whID = id;
+}
+
+function posAddProduct(id, price, taxRate, name, sku, barcode) {
+	var form = new FormData();
+	form.append('product_id', id);
+	form.append('quantity', 1);
+	form.append('warehouse_id', _whID);
+	htmx.ajax('POST', '/pos/cart/add', {
+		target: '#pos-cart-panel',
+		swap: 'innerHTML',
+		values: {product_id: id, quantity: 1, warehouse_id: _whID}
+	});
+}
+
+// Clear search input after adding from scanner
+document.addEventListener('htmx:afterRequest', function(e) {
+	if (e.detail.pathInfo && e.detail.pathInfo.requestPath === '/pos/cart/add') {
+		var inp = document.getElementById('barcode-input');
+		if (inp) { inp.value = ''; inp.focus(); }
+	}
+});
+
+// Auto-focus barcode input on page load
+window.addEventListener('load', function() {
+	var inp = document.getElementById('barcode-input');
+	if (inp) inp.focus();
+});
+</script>
+
+<style>
+.pos-products-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 8px;
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+	padding: 4px;
+}
+.pos-product-card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 10px;
+	cursor: pointer;
+	transition: border-color .15s, box-shadow .15s;
+	user-select: none;
+}
+.pos-product-card:hover {
+	border-color: var(--brand-400);
+	box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.pos-product-card:active { transform: scale(.97); }
+.pos-product-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; line-height: 1.3; }
+.pos-product-sku  { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+.pos-product-barcode { font-size: 10px; color: var(--text-muted); font-family: monospace; }
+.pos-product-price { font-size: 14px; font-weight: 700; color: var(--brand-600); margin-top: 6px; }
+.pos-product-stock { font-size: 10px; color: #059669; margin-top: 2px; }
+</style>
+{{ end }}

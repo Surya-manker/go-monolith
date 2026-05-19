@@ -3,18 +3,45 @@
 	<form class="grid-form" hx-post="/products/update?id={{ .Edit.ID }}" hx-target="#products-table" hx-swap="innerHTML">
 		<label>
 			<span>Name *</span>
-			<input type="text" name="name" required value="{{ .Edit.Name }}">
+			<input type="text" name="name" required value="{{ .Edit.Name }}" placeholder="e.g. USB-C Cable">
 		</label>
 		<label>
 			<span>SKU</span>
 			<input type="text" value="{{ .Edit.SKU }}" disabled>
 		</label>
 		<label>
-			<span>Price *</span>
+			<span>Barcode / EAN</span>
+			<input type="text" name="barcode" value="{{ .Edit.Barcode }}" placeholder="8901234567890">
+		</label>
+		<label>
+			<span>HSN / SAC Code</span>
+			<input type="text" name="hsn_code" value="{{ .Edit.HSNCode }}" placeholder="e.g. 8471">
+		</label>
+		<label>
+			<span>Brand</span>
+			<input type="text" name="brand" value="{{ .Edit.Brand }}" placeholder="e.g. Samsung">
+		</label>
+		<label>
+			<span>Unit</span>
+			<select name="unit">
+				<option value="pcs" {{ if eq .Edit.Unit "pcs" }}selected{{ end }}>Pcs</option>
+				<option value="nos" {{ if eq .Edit.Unit "nos" }}selected{{ end }}>Nos</option>
+				<option value="kg"  {{ if eq .Edit.Unit "kg"  }}selected{{ end }}>Kg</option>
+				<option value="gm"  {{ if eq .Edit.Unit "gm"  }}selected{{ end }}>Gm</option>
+				<option value="ltr" {{ if eq .Edit.Unit "ltr" }}selected{{ end }}>Ltr</option>
+				<option value="ml"  {{ if eq .Edit.Unit "ml"  }}selected{{ end }}>Ml</option>
+				<option value="mtr" {{ if eq .Edit.Unit "mtr" }}selected{{ end }}>Mtr</option>
+				<option value="box" {{ if eq .Edit.Unit "box" }}selected{{ end }}>Box</option>
+				<option value="dozen" {{ if eq .Edit.Unit "dozen" }}selected{{ end }}>Dozen</option>
+				<option value="crt" {{ if eq .Edit.Unit "crt" }}selected{{ end }}>Crt</option>
+			</select>
+		</label>
+		<label>
+			<span>Price (Rs.) *</span>
 			<input name="price" type="number" step="0.01" min="0.01" required value="{{ .Edit.PriceValue }}">
 		</label>
 		<label>
-			<span>Cost</span>
+			<span>Cost Price</span>
 			<input name="cost_price" type="number" step="0.01" min="0" value="{{ .Edit.CostPriceValue }}">
 		</label>
 		<label>
@@ -22,12 +49,19 @@
 			<input name="tax_rate" type="number" step="0.01" min="0" value="{{ .Edit.TaxRate }}">
 		</label>
 		<label>
-			<span>Low Stock Threshold</span>
+			<span>Low Stock Alert</span>
 			<input name="low_stock_threshold" type="number" min="1" value="{{ .Edit.LowStockThreshold }}">
+		</label>
+		<label>
+			<span>Status</span>
+			<select name="status">
+				<option value="active"   {{ if eq .Edit.Status "active"   }}selected{{ end }}>Active</option>
+				<option value="inactive" {{ if eq .Edit.Status "inactive" }}selected{{ end }}>Inactive</option>
+			</select>
 		</label>
 		<label class="wide">
 			<span>Description</span>
-			<input type="text" name="description" value="{{ .Edit.Description }}">
+			<input type="text" name="description" value="{{ .Edit.Description }}" placeholder="Optional description">
 		</label>
 		<button class="button" type="submit">Update Product</button>
 		<a class="button button--muted" href="/products">Cancel</a>

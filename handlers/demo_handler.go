@@ -2,8 +2,11 @@ package handlers
 
 import "net/http"
 
-// Demo logs the visitor in as the seeded demo account (read-only feel,
-// but actually a real session). The demo user is created by the seed script.
+// Demo logs the visitor in as the seeded demo account and registers the resulting
+// auth session token in DemoSessions. All CRUD calls for this token are routed to
+// an isolated in-memory store — the real database is never touched.
+// A normal admin login creates a different token that is NOT in DemoSessions,
+// so real MySQL is used automatically, even in the same browser.
 func (a *App) Demo(w http.ResponseWriter, r *http.Request) {
 	sess, err := a.AuthService.Login(
 		"admin@invobill.com",
@@ -17,7 +20,12 @@ func (a *App) Demo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.AuthService.SetCookie(w, sess, false)
-	// Set a cookie flag so the UI can show a "Demo Mode" banner.
+
+	// Bind this specific auth token → fresh in-memory DemoStore.
+	// Other auth tokens (including a subsequent normal login) won't be in this map.
+	a.DemoSessions.Register(sess.ID)
+
+	// Non-HttpOnly so JS can show the "Demo Mode" banner.
 	http.SetCookie(w, &http.Cookie{
 		Name:     "demo_mode",
 		Value:    "1",

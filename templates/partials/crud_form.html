@@ -8,6 +8,7 @@
 		<label>
 			<span>{{ .Label }}</span>
 			<input name="{{ .Name }}" type="{{ .Type }}" value="{{ .Value }}"
+				placeholder="{{ orStr (index $.Config.Placeholders .Name) .Label }}"
 				{{ if eq .Name "name" }}required{{ end }}
 				{{ if eq .Name "number" }}required{{ end }}>
 		</label>

@@ -1,0 +1,124 @@
+{{ define "title" }}Procurement{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>Procurement Dashboard</h1>
+		<p class="muted">Supplier management, purchase orders, GRN, and payment tracking.</p>
+	</div>
+	<a class="button" href="/procurement/orders/new">New Purchase Order</a>
+</section>
+
+{{/* Stats */}}
+<section class="metrics">
+	<article class="metric-card" {{ if gt .Stats.PendingPOs 0 }}style="border-color:#d97706"{{ end }}>
+		<span class="metric-label">Pending POs</span>
+		<strong {{ if gt .Stats.PendingPOs 0 }}style="color:#d97706"{{ end }}>{{ .Stats.PendingPOs }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/procurement/orders?status=pending">View →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.TotalDues 0.0 }}style="border-color:#dc2626"{{ end }}>
+		<span class="metric-label">Supplier Dues</span>
+		<strong {{ if gt .Stats.TotalDues 0.0 }}style="color:#dc2626"{{ end }}>Rs. {{ printf "%.2f" .Stats.TotalDues }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/procurement/payments">Settle →</a></p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Active Suppliers</span>
+		<strong>{{ .Stats.TotalSuppliers }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/suppliers">Manage →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.ReorderCount 0 }}style="border-color:#d97706"{{ end }}>
+		<span class="metric-label">Reorder Alerts</span>
+		<strong {{ if gt .Stats.ReorderCount 0 }}style="color:#d97706"{{ end }}>{{ .Stats.ReorderCount }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/procurement/reorder">Order now →</a></p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">This Month Spend</span>
+		<strong>Rs. {{ printf "%.2f" .Stats.MonthSpend }}</strong>
+	</article>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>Recent POs</h2>
+		<a class="text-link" href="/procurement/orders">All →</a>
+	</div>
+	{{ if .RecentPOs }}
+	<div class="stack">
+		{{ range .RecentPOs }}
+		<div class="stock-row">
+			<div>
+				<strong class="mono">{{ .PONumber }}</strong>
+				<span>{{ .SupplierName }}</span>
+			</div>
+			<div style="text-align:right">
+				{{ if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+				{{ else if eq .Status "pending" }}<span class="badge badge--pending">Pending</span>
+				{{ else if eq .Status "approved" }}<span class="badge badge--info">Approved</span>
+				{{ else if eq .Status "partially_received" }}<span class="badge badge--warning">Partial</span>
+				{{ else if eq .Status "completed" }}<span class="badge badge--active">Done</span>
+				{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				<p class="muted" style="font-size:11px;margin-top:2px">Rs. {{ printf "%.0f" .GrandTotal }}</p>
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">No purchase orders yet. <a href="/procurement/orders/new">Create one</a></div>
+	{{ end }}
+</section>
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>Recent GRNs</h2>
+		<a class="text-link" href="/procurement/grn">All →</a>
+	</div>
+	{{ if .RecentGRNs }}
+	<div class="stack">
+		{{ range .RecentGRNs }}
+		<div class="stock-row">
+			<div>
+				<strong class="mono">{{ .GRNNumber }}</strong>
+				<span>{{ .SupplierName }}</span>
+			</div>
+			<div style="text-align:right">
+				<span class="badge badge--active">Received</span>
+				<p class="muted" style="font-size:11px;margin-top:2px">{{ .TotalReceived }} units</p>
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">No GRNs yet.</div>
+	{{ end }}
+</section>
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>⚠ Reorder Alerts</h2>
+		<a class="text-link" href="/procurement/reorder">All →</a>
+	</div>
+	{{ if .Suggestions }}
+	<div class="stack">
+		{{ range .Suggestions }}
+		<div class="stock-row">
+			<div>
+				<strong>{{ .ProductName }}</strong>
+				<span class="mono">{{ .SKU }}</span>
+			</div>
+			<div style="text-align:right">
+				<span class="badge badge--danger">{{ .CurrentStock }} / {{ .LowStockThreshold }}</span>
+				<p class="muted" style="font-size:11px;margin-top:2px">Need {{ .SuggestedOrderQty }}</p>
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">✅ All stock levels OK</div>
+	{{ end }}
+</section>
+
+</div>
+{{ end }}

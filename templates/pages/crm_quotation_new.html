@@ -1,0 +1,110 @@
+{{ define "title" }}New Quotation{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>New Quotation</h1>
+		<p class="muted">Create a price quotation for a customer. Convert it to a sales order when approved.</p>
+	</div>
+	<a class="button button--muted" href="/crm/quotations">← Quotations</a>
+</section>
+
+<section class="panel" style="max-width:1000px">
+	<form method="POST" action="/crm/quotations">
+		<div class="grid-form" style="margin-bottom:16px">
+			<label>
+				<span>Customer *</span>
+				<select name="customer_id" required>
+					<option value="">— Select customer —</option>
+					{{ range .Customers }}
+					<option value="{{ .ID }}">{{ .Name }} ({{ .CustomerCode }})</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Warehouse</span>
+				<select name="warehouse_id">
+					<option value="0">— No specific warehouse —</option>
+					{{ range .Warehouses }}
+					<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} ★{{ end }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Valid Until</span>
+				<input type="date" name="valid_until">
+			</label>
+			<label class="wide">
+				<span>Notes</span>
+				<input type="text" name="notes" placeholder="Terms, conditions, special pricing notes">
+			</label>
+		</div>
+
+		<h3 style="margin-bottom:10px">Items</h3>
+		{{ template "sales-items-form" .Products }}
+
+		<div style="margin-top:16px;display:flex;gap:8px">
+			<button class="button" type="submit">Create Quotation</button>
+			<a class="button button--muted" href="/crm/quotations">Cancel</a>
+		</div>
+	</form>
+</section>
+
+{{ template "sales-items-script" .Products }}
+{{ end }}
+
+{{ define "sales-items-form" }}
+<div id="sales-items">
+	<div class="sales-item-row">
+		<select name="product_id[]" required style="flex:2.5" onchange="fillPrice(this)">
+			<option value="">— Product —</option>
+			{{ range . }}
+			<option value="{{ .ID }}" data-price="{{ printf "%.2f" .Price }}" data-tax="{{ printf "%.2f" .TaxRate }}">{{ .Name }} ({{ .SKU }})</option>
+			{{ end }}
+		</select>
+		<input type="number" name="quantity[]" placeholder="Qty" min="1" required style="flex:.7">
+		<input type="number" name="unit_price[]" placeholder="Price" step="0.01" min="0" required style="flex:1">
+		<input type="number" name="tax_rate[]" placeholder="Tax %" step="0.01" min="0" value="0" style="flex:.7">
+		<input type="number" name="discount[]" placeholder="Discount" step="0.01" min="0" value="0" style="flex:.8">
+		<button type="button" class="link-button danger" onclick="removeItemRow(this)">✕</button>
+	</div>
+</div>
+<button type="button" class="button button--muted button--sm" style="margin:8px 0" onclick="addItemRow()">+ Add Item</button>
+<style>
+.sales-item-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; }
+.sales-item-row select, .sales-item-row input { padding:6px 8px; font-size:13px; }
+</style>
+{{ end }}
+
+{{ define "sales-items-script" }}
+<script>
+var _productPrices = {};
+{{ range . }}
+_productPrices[{{ .ID }}] = { price: {{ printf "%.2f" .Price }}, tax: {{ printf "%.2f" .TaxRate }} };
+{{ end }}
+function fillPrice(sel) {
+	var row = sel.closest('.sales-item-row');
+	var d = _productPrices[sel.value];
+	if (d) {
+		row.querySelector('input[name="unit_price[]"]').value = d.price.toFixed(2);
+		row.querySelector('input[name="tax_rate[]"]').value = d.tax.toFixed(2);
+	}
+}
+function addItemRow() {
+	var first = document.querySelector('#sales-items .sales-item-row');
+	var clone = first.cloneNode(true);
+	clone.querySelectorAll('input').forEach(function(i) { i.value = i.defaultValue || ''; });
+	clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+	clone.querySelector('select').addEventListener('change', function() { fillPrice(this); });
+	document.getElementById('sales-items').appendChild(clone);
+}
+function removeItemRow(btn) {
+	var rows = document.querySelectorAll('#sales-items .sales-item-row');
+	if (rows.length > 1) btn.closest('.sales-item-row').remove();
+}
+document.querySelectorAll('.sales-item-row select').forEach(function(s) {
+	s.addEventListener('change', function() { fillPrice(this); });
+});
+</script>
+{{ end }}

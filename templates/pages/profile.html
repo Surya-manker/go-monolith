@@ -25,15 +25,18 @@
 			hx-post="/profile" hx-target="body" hx-swap="innerHTML">
 			<label>
 				<span>Full Name</span>
-				<input name="name" type="text" value="{{ .User.Name }}" required>
+				<input name="name" type="text" value="{{ .User.Name }}" required
+					placeholder="e.g. Rahul Sharma">
 			</label>
 			<label>
 				<span>Email</span>
-				<input type="email" value="{{ .User.Email }}" disabled style="opacity:.6">
+				<input type="email" value="{{ .User.Email }}" disabled style="opacity:.6"
+					placeholder="{{ .User.Email }}">
 			</label>
 			<label>
 				<span>Role</span>
-				<input type="text" value="{{ .User.Role }}" disabled style="opacity:.6">
+				<input type="text" value="{{ .User.Role }}" disabled style="opacity:.6"
+					placeholder="{{ .User.Role }}">
 			</label>
 			<label>
 				<span>Current Password <small class="muted">(required to change password)</small></span>

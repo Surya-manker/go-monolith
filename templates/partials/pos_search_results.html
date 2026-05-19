@@ -1,0 +1,24 @@
+{{ if .Products }}
+<div class="pos-products-grid">
+	{{ range .Products }}
+	<div class="pos-product-card"
+		onclick="posAddProduct({{ .ID }}, {{ printf `%.2f` .Price }}, {{ printf `%.2f` .TaxRate }}, {{ printf "%q" .Name }}, {{ printf "%q" .SKU }}, {{ printf "%q" .Barcode }})">
+		<div class="pos-product-name">{{ .Name }}</div>
+		<div class="pos-product-sku">{{ .SKU }}</div>
+		{{ if .Barcode }}<div class="pos-product-barcode">{{ .Barcode }}</div>{{ end }}
+		<div class="pos-product-price">Rs. {{ printf "%.2f" .Price }}</div>
+		{{ if le .Stock 0 }}
+		<div class="badge badge--danger" style="margin-top:4px;font-size:10px">Out of Stock</div>
+		{{ else }}
+		<div class="pos-product-stock">{{ .Stock }} in stock</div>
+		{{ end }}
+	</div>
+	{{ end }}
+</div>
+{{ else if .Query }}
+<div class="empty" style="padding:24px;text-align:center">
+	<p style="font-size:24px;margin-bottom:8px">🔍</p>
+	<p style="font-weight:600">No results for "{{ .Query }}"</p>
+	<p class="muted" style="font-size:13px">Try a different barcode, SKU, or product name.</p>
+</div>
+{{ end }}

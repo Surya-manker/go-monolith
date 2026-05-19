@@ -1,0 +1,84 @@
+{{ define "title" }}Cashflow{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>Cashflow Report</h1>
+		<p class="muted">Monthly cash in vs cash out from POS sales, customer/supplier payments, and expenses.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" target="_blank" href="/finance/export?type=cashflow&from={{ .Filter.From }}&to={{ .Filter.To }}">↓ CSV</a>
+		<a class="button button--muted" href="/finance">← Finance</a>
+	</div>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .Filter.From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .Filter.To }}" style="padding:5px 8px">
+		</label>
+		<div style="display:flex;align-items:flex-end">
+			<button class="button" type="submit">Apply</button>
+		</div>
+	</form>
+</section>
+
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total Cash In</span>
+		<strong style="color:#059669">Rs. {{ printf "%.2f" .TotalIn }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Total Cash Out</span>
+		<strong style="color:#dc2626">Rs. {{ printf "%.2f" .TotalOut }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Net Cashflow</span>
+		<strong {{ if lt .NetFlow 0.0 }}style="color:#dc2626"{{ else }}style="color:#059669"{{ end }}>
+			Rs. {{ printf "%.2f" .NetFlow }}
+		</strong>
+	</article>
+</section>
+
+<section class="panel">
+	{{ if .Rows }}
+	<table>
+		<thead>
+			<tr>
+				<th>Period</th>
+				<th style="text-align:right">Cash In (Rs.)</th>
+				<th style="text-align:right">Cash Out (Rs.)</th>
+				<th style="text-align:right">Net (Rs.)</th>
+				<th>Trend</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Rows }}
+			<tr>
+				<td><strong>{{ .Period }}</strong></td>
+				<td style="text-align:right;color:#059669">{{ printf "%.2f" .CashIn }}</td>
+				<td style="text-align:right;color:#dc2626">{{ printf "%.2f" .CashOut }}</td>
+				<td style="text-align:right;font-weight:700;{{ if lt .NetCashflow 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+					{{ printf "%.2f" .NetCashflow }}
+				</td>
+				<td>
+					{{ if ge .NetCashflow 0.0 }}<span class="badge badge--active">▲ Positive</span>
+					{{ else }}<span class="badge badge--danger">▼ Negative</span>{{ end }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p class="muted">No cash transactions in the selected period.</p>
+	</div>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child,form{display:none!important} }</style>
+{{ end }}

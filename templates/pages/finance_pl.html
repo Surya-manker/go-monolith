@@ -1,0 +1,105 @@
+{{ define "title" }}Profit & Loss{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>Profit & Loss</h1>
+		<p class="muted">Revenue, cost of goods, expenses, and net profit derived from your inventory and sales data.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" target="_blank" href="/finance/export?type=pl&from={{ .Filter.From }}&to={{ .Filter.To }}">↓ CSV</a>
+		<a class="button button--muted" href="/finance">← Finance</a>
+	</div>
+</section>
+
+{{/* Date filter */}}
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .Filter.From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .Filter.To }}" style="padding:5px 8px">
+		</label>
+		<div style="display:flex;align-items:flex-end">
+			<button class="button" type="submit">Apply</button>
+		</div>
+	</form>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+{{/* Revenue section */}}
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Revenue</h2>
+	<table>
+		<tr><td class="muted">POS Sales</td><td style="text-align:right">Rs. {{ printf "%.2f" .Report.POSRevenue }}</td></tr>
+		<tr><td class="muted">Sales Orders</td><td style="text-align:right">Rs. {{ printf "%.2f" .Report.SORevenue }}</td></tr>
+		<tr style="font-weight:600"><td>Total Revenue</td><td style="text-align:right">Rs. {{ printf "%.2f" .Report.TotalRevenue }}</td></tr>
+		{{ if gt .Report.SalesReturns 0.0 }}
+		<tr><td class="muted" style="color:#dc2626">Returns</td><td style="text-align:right;color:#dc2626">-Rs. {{ printf "%.2f" .Report.SalesReturns }}</td></tr>
+		{{ end }}
+		<tr style="font-weight:700;border-top:2px solid var(--border)"><td>Net Revenue</td><td style="text-align:right;color:var(--brand-600)">Rs. {{ printf "%.2f" .Report.NetRevenue }}</td></tr>
+	</table>
+
+	<hr style="margin:12px 0;border:none;border-top:1px solid var(--border)">
+	<h2 style="margin-bottom:12px">Cost of Goods</h2>
+	<table>
+		<tr><td class="muted">Procurement (completed POs)</td><td style="text-align:right">Rs. {{ printf "%.2f" .Report.COGS }}</td></tr>
+		<tr style="font-weight:700"><td>Gross Profit</td><td style="text-align:right;{{ if lt .Report.GrossProfit 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+			Rs. {{ printf "%.2f" .Report.GrossProfit }}
+			<span class="muted" style="font-size:12px">({{ printf "%.1f" .Report.GrossMarginPct }}%)</span>
+		</td></tr>
+	</table>
+</section>
+
+{{/* Expenses section */}}
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Expenses</h2>
+	{{ if .Report.ExpensesByCategory }}
+	<table>
+		{{ range .Report.ExpensesByCategory }}
+		<tr><td class="muted">{{ .Category }}</td><td style="text-align:right">Rs. {{ printf "%.2f" .Amount }}</td></tr>
+		{{ end }}
+		<tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total Expenses</td><td style="text-align:right;color:#dc2626">Rs. {{ printf "%.2f" .Report.TotalExpenses }}</td></tr>
+	</table>
+	{{ else }}
+	<p class="muted">No expenses in this period. <a href="/finance/expenses">Add expenses</a></p>
+	{{ end }}
+</section>
+
+</div>
+
+{{/* Net profit card */}}
+<section class="panel" style="text-align:center;padding:24px">
+	<p class="muted" style="margin-bottom:8px">Net Profit ({{ .Report.From }} to {{ .Report.To }})</p>
+	<p style="font-size:32px;font-weight:800;{{ if lt .Report.NetProfit 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+		Rs. {{ printf "%.2f" .Report.NetProfit }}
+	</p>
+	<p class="muted" style="margin-top:4px">Net Margin: {{ printf "%.1f" .Report.NetMarginPct }}%</p>
+</section>
+
+{{/* GST summary */}}
+<section class="panel">
+	<h2 style="margin-bottom:12px">GST in this Period</h2>
+	<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+		<div>
+			<p class="muted" style="font-size:12px">Output GST (Collected)</p>
+			<p style="font-size:20px;font-weight:700">Rs. {{ printf "%.2f" .Report.OutputGST }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Input GST (Paid)</p>
+			<p style="font-size:20px;font-weight:700">Rs. {{ printf "%.2f" .Report.InputGST }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Net GST Payable</p>
+			<p style="font-size:20px;font-weight:700;{{ if gt .Report.NetGST 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+				Rs. {{ printf "%.2f" .Report.NetGST }}
+			</p>
+		</div>
+	</div>
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child,form{display:none!important} }</style>
+{{ end }}

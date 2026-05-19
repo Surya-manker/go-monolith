@@ -1,131 +1,542 @@
 {{ define "title" }}Dashboard{{ end }}
 
 {{ define "content" }}
-<section class="page-head">
-	<div>
-		<p class="eyebrow">Overview</p>
-		<h1>Dashboard</h1>
-		<p class="muted">Welcome back{{ if .User }}, {{ .User.Name }}{{ end }}. Here's your business snapshot.</p>
-	</div>
-	<a class="button" href="/products">Manage Products</a>
-</section>
+
+{{/* ── Welcome modal (shown once after /setup completes) ── */}}
+<dialog id="welcome-modal" class="welcome-modal">
+  <div class="welcome-inner">
+    <button class="welcome-close" onclick="document.getElementById('welcome-modal').close()" aria-label="Close">✕</button>
+    <div class="welcome-icon">🎉</div>
+    <h2>Welcome to InvoBill!</h2>
+    <p>Your ERP is ready. Here's what you can do next to get the most out of it.</p>
+    <div class="welcome-actions">
+      <a class="button" href="/checklist">View Setup Checklist</a>
+      <a class="button button--muted" href="/products">Add Products</a>
+      <a class="button button--muted" href="/pos">Try POS Terminal</a>
+    </div>
+    <label class="welcome-dismiss">
+      <input type="checkbox" id="dismiss-welcome" onchange="dismissWelcome(this)">
+      Don't show again
+    </label>
+  </div>
+</dialog>
 
 {{/* SSE live update container */}}
 <div hx-ext="sse" sse-connect="/sse/dashboard" sse-swap="dashboard" style="display:none"></div>
 
-{{/* ── Row 1: Key metrics ── */}}
-<section class="metrics">
-	<article class="metric-card">
-		<span class="metric-label">Total Products</span>
-		<strong><span id="sse-products">{{ .ProductCount }}</span></strong>
-		<p class="muted" style="margin-top:4px"><span id="sse-lowstock">{{ .LowStockCount }}</span> low stock</p>
-	</article>
-	<article class="metric-card">
-		<span class="metric-label">Invoice Revenue</span>
-		<strong style="font-size:22px"><span id="sse-invoice-total">{{ .InvoiceTotal }}</span></strong>
-		<p class="muted" style="margin-top:4px"><span id="sse-invoices">{{ index .Counts "invoices" }}</span> invoices total</p>
-	</article>
-	<article class="metric-card">
-		<span class="metric-label">Pending Invoices</span>
-		<strong style="font-size:22px;color:var(--red-text)"><span id="sse-pending">{{ .PendingInvoiceTotal }}</span></strong>
-		<p class="muted" style="margin-top:4px">Unpaid balance</p>
-	</article>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Overview</p>
+    <h1>Dashboard</h1>
+    <p class="muted">Welcome back{{ if .User }}, <strong>{{ .User.Name }}</strong>{{ end }}. Here's your business at a glance.</p>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a class="button button--muted" href="/checklist">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Setup Checklist
+    </a>
+    <a class="button" href="/products">Manage Products</a>
+  </div>
 </section>
 
-{{/* ── Row 2: More counts ── */}}
-<section class="metrics">
-	<article class="metric-card">
-		<span class="metric-label">Customers</span>
-		<strong><span id="sse-customers">{{ index .Counts "customers" }}</span></strong>
-	</article>
-	<article class="metric-card">
-		<span class="metric-label">Vendors</span>
-		<strong>{{ index .Counts "vendors" }}</strong>
-	</article>
-	<article class="metric-card">
-		<span class="metric-label">Purchase Orders</span>
-		<strong>{{ index .Counts "purchase-orders" }}</strong>
-		<p class="muted" style="margin-top:4px">Value: {{ .PurchaseTotal }}</p>
-	</article>
-</section>
+{{/* ── Row 1: KPI metric cards ── */}}
+<div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">
 
-{{/* ── Row 3: Low stock + Top customers + Activity ── */}}
-<div class="dash-3col" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:1280px;margin:0 auto 18px">
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      </div>
+      <span class="stat-card-label">Total Products</span>
+    </div>
+    <div class="stat-card-value"><span id="sse-products">{{ .ProductCount }}</span></div>
+    <div class="stat-card-sub">
+      <span class="{{ if gt .LowStockCount 0 }}stat-trend stat-trend--down{{ else }}stat-trend stat-trend--flat{{ end }}">
+        {{ .LowStockCount }} low stock
+      </span>
+      · {{ .DeadStockCount }} dead
+    </div>
+  </div>
 
-	{{/* Low stock alerts */}}
-	<section class="panel" style="margin:0">
-		<div class="section-head">
-			<div>
-				<h2>⚠ Low Stock</h2>
-				<p class="muted">At or below threshold</p>
-			</div>
-			<a class="text-link" href="/products">View all</a>
-		</div>
-		<div class="stack">
-			{{ range .LowStockItems }}
-				<div class="stock-row">
-					<div>
-						<strong>{{ .Name }}</strong>
-						<span>{{ .SKU }}</span>
-					</div>
-					<span class="badge badge--danger">{{ .Stock }} left</span>
-				</div>
-			{{ else }}
-				<div class="empty">✅ All products well stocked</div>
-			{{ end }}
-		</div>
-	</section>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      <span class="stat-card-label">Invoice Revenue</span>
+    </div>
+    <div class="stat-card-value" style="color:var(--c-green)"><span id="sse-invoice-total">{{ .InvoiceTotal }}</span></div>
+    <div class="stat-card-sub"><span id="sse-invoices">{{ index .Counts "invoices" }}</span> invoices total</div>
+  </div>
 
-	{{/* Top customers */}}
-	<section class="panel" style="margin:0">
-		<div class="section-head">
-			<div>
-				<h2>🏆 Top Customers</h2>
-				<p class="muted">By invoice value</p>
-			</div>
-			<a class="text-link" href="/customers">View all</a>
-		</div>
-		<div class="stack">
-			{{ range .TopCustomers }}
-				<div class="stock-row">
-					<div>
-						<strong>{{ .customer }}</strong>
-						<span>{{ .invoice_count }} invoices</span>
-					</div>
-					<span style="font-size:13px;font-weight:700;color:var(--brand-600)">{{ .total_value }}</span>
-				</div>
-			{{ else }}
-				<div class="empty">No invoice data yet</div>
-			{{ end }}
-		</div>
-	</section>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <span class="stat-card-label">Pending Invoices</span>
+    </div>
+    <div class="stat-card-value" style="color:var(--c-amber)"><span id="sse-pending">{{ .PendingInvoiceTotal }}</span></div>
+    <div class="stat-card-sub">Awaiting payment</div>
+  </div>
 
-	{{/* Recent activity */}}
-	<section class="panel" style="margin:0">
-		<div class="section-head">
-			<div>
-				<h2>🕐 Recent Activity</h2>
-				<p class="muted">Latest changes</p>
-			</div>
-			<a class="text-link" href="/audit-logs">View all</a>
-		</div>
-		<div class="stack">
-			{{ range .RecentActivity }}
-				<div class="activity-item">
-					<div class="activity-dot activity-dot--{{ .action }}"></div>
-					<div style="min-width:0">
-						<p style="margin:0;font-size:13px;font-weight:600;text-transform:capitalize">
-							{{ .action }} {{ .module }}
-							{{ if .record_id }}<span class="mono">#{{ .record_id }}</span>{{ end }}
-						</p>
-						<p class="muted" style="margin:2px 0 0;font-size:11px">{{ .user_name }} · {{ .created_at }}</p>
-					</div>
-				</div>
-			{{ else }}
-				<div class="empty">No activity yet</div>
-			{{ end }}
-		</div>
-	</section>
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+      </div>
+      <span class="stat-card-label">Warehouses</span>
+    </div>
+    <div class="stat-card-value">{{ .WarehouseCount }}</div>
+    <div class="stat-card-sub">{{ .TransferCount }} stock transfers</div>
+  </div>
 
 </div>
+
+{{/* ── Row 2: Stock value + PO ── */}}
+<div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">
+
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+      <span class="stat-card-label">Stock Value (MRP)</span>
+    </div>
+    <div class="stat-card-value" style="font-size:18px;color:var(--brand-600)">{{ .StockValue }}</div>
+    <div class="stat-card-sub">Cost: {{ .StockCostValue }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <span class="stat-card-label">Purchase Orders</span>
+    </div>
+    <div class="stat-card-value">{{ index .Counts "purchase-orders" }}</div>
+    <div class="stat-card-sub">Value: {{ .PurchaseTotal }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <span class="stat-card-label">Customers</span>
+    </div>
+    <div class="stat-card-value">{{ index .Counts "customers" }}</div>
+    <div class="stat-card-sub">Registered accounts</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <div class="stat-card-icon stat-card-icon--amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <span class="stat-card-label">POS Sales Today</span>
+    </div>
+    <div class="stat-card-value" id="sse-pos">—</div>
+    <div class="stat-card-sub"><a href="/pos/sales" class="text-link">View history</a></div>
+  </div>
+
+</div>
+
+{{/* ── Expiry alerts ── */}}
+{{ if or .ExpiryStats.ExpiredCount .ExpiryStats.ExpiringCount }}
+<div class="alert-row" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+  {{ if .ExpiryStats.ExpiredCount }}
+  <div class="alert-banner alert-banner--danger">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div>
+      <strong>{{ .ExpiryStats.ExpiredCount }} batches expired</strong> — {{ .ExpiryStats.ExpiredQty }} units need write-off
+    </div>
+    <a class="alert-banner-link" href="/batches/expiry">Write Off →</a>
+  </div>
+  {{ end }}
+  {{ if .ExpiryStats.ExpiringCount }}
+  <div class="alert-banner alert-banner--warning">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>
+      <strong>{{ .ExpiryStats.ExpiringCount }} batches</strong> expiring in {{ .ExpiryStats.AlertDays }} days — {{ .ExpiryStats.ExpiringQty }} units
+    </div>
+    <a class="alert-banner-link" href="/batches/expiry">Review →</a>
+  </div>
+  {{ end }}
+</div>
+{{ end }}
+
+{{/* ── Revenue sparkline chart ── */}}
+<div class="panel" style="margin-bottom:16px">
+  <div class="section-head">
+    <div>
+      <h2>Revenue Trend</h2>
+      <p class="muted">Last 30 days — invoice + POS combined</p>
+    </div>
+    <a class="text-link" href="/reports/sales">Full Report</a>
+  </div>
+  <div style="height:140px;position:relative;padding:0 8px 8px">
+    <canvas id="revenue-chart" style="width:100%;height:100%"></canvas>
+  </div>
+</div>
+
+{{/* ── 3-col: Low stock + Top customers + Activity ── */}}
+<div class="dash-3col">
+
+  <section class="panel" style="margin:0">
+    <div class="section-head">
+      <div>
+        <h2>Low Stock</h2>
+        <p class="muted">At or below threshold</p>
+      </div>
+      <a class="text-link" href="/products">View all</a>
+    </div>
+    <div class="stack">
+      {{ range .LowStockItems }}
+      <div class="stock-row">
+        <div>
+          <strong>{{ .Name }}</strong>
+          <span>{{ .SKU }}</span>
+        </div>
+        <span class="badge badge--danger">{{ .Stock }} {{ .Unit }}</span>
+      </div>
+      {{ else }}
+      <div class="empty-state" style="padding:2rem 1rem">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="empty-state-title">All products well stocked</div>
+        <div class="empty-state-sub">No items below their threshold.</div>
+      </div>
+      {{ end }}
+    </div>
+  </section>
+
+  <section class="panel" style="margin:0">
+    <div class="section-head">
+      <div>
+        <h2>Top Customers</h2>
+        <p class="muted">By invoice value</p>
+      </div>
+      <a class="text-link" href="/crm/customers">View all</a>
+    </div>
+    <div class="stack">
+      {{ range .TopCustomers }}
+      <div class="stock-row">
+        <div>
+          <strong>{{ index . "customer" }}</strong>
+          <span>{{ index . "invoice_count" }} invoices</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:var(--brand-600)">{{ index . "total_value" }}</span>
+      </div>
+      {{ else }}
+      <div class="empty-state" style="padding:2rem 1rem">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="empty-state-title">No customers yet</div>
+        <div class="empty-state-sub"><a href="/crm/customers" class="text-link">Add your first customer →</a></div>
+      </div>
+      {{ end }}
+    </div>
+  </section>
+
+  <section class="panel" style="margin:0">
+    <div class="section-head">
+      <div>
+        <h2>Recent Activity</h2>
+        <p class="muted">Latest changes</p>
+      </div>
+      <a class="text-link" href="/audit-logs">View all</a>
+    </div>
+    <div class="stack">
+      {{ range .RecentActivity }}
+      <div class="activity-item">
+        <div class="activity-dot activity-dot--{{ index . "action" }}"></div>
+        <div style="min-width:0">
+          <p style="margin:0;font-size:13px;font-weight:600;text-transform:capitalize">
+            {{ index . "action" }} {{ index . "module" }}
+            {{ if index . "record_id" }}<span class="mono">#{{ index . "record_id" }}</span>{{ end }}
+          </p>
+          <p class="muted" style="margin:2px 0 0;font-size:11px">
+            {{ index . "user_name" }} · {{ index . "created_at" }}
+          </p>
+        </div>
+      </div>
+      {{ else }}
+      <div class="empty-state" style="padding:2rem 1rem">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="empty-state-title">No activity yet</div>
+        <div class="empty-state-sub">Actions you take will appear here.</div>
+      </div>
+      {{ end }}
+    </div>
+  </section>
+
+</div>
+
+{{/* ── Quick actions row ── */}}
+<div class="quick-actions-grid">
+  <a class="quick-action" href="/pos">
+    <div class="quick-action-icon">🖥</div>
+    <div class="quick-action-label">POS Terminal</div>
+    <div class="quick-action-sub">Start a sale</div>
+  </a>
+  <a class="quick-action" href="/invoices">
+    <div class="quick-action-icon">🧾</div>
+    <div class="quick-action-label">New Invoice</div>
+    <div class="quick-action-sub">Create & send</div>
+  </a>
+  <a class="quick-action" href="/procurement/orders/new">
+    <div class="quick-action-icon">📋</div>
+    <div class="quick-action-label">Purchase Order</div>
+    <div class="quick-action-sub">Order from supplier</div>
+  </a>
+  <a class="quick-action" href="/reports">
+    <div class="quick-action-icon">📊</div>
+    <div class="quick-action-label">Reports</div>
+    <div class="quick-action-sub">Analytics & exports</div>
+  </a>
+  <a class="quick-action" href="/batches/expiry">
+    <div class="quick-action-icon">⏰</div>
+    <div class="quick-action-label">Expiry Tracker</div>
+    <div class="quick-action-sub">Manage batches</div>
+  </a>
+  <a class="quick-action" href="/finance">
+    <div class="quick-action-icon">💰</div>
+    <div class="quick-action-label">Finance</div>
+    <div class="quick-action-sub">P&L, cashflow</div>
+  </a>
+</div>
+
+<script>
+// ── Welcome modal: show once after ?welcome=1 ──────────────────────────────
+(function () {
+  var params = new URLSearchParams(location.search);
+  var dismissed = localStorage.getItem('welcome_dismissed');
+  if (params.get('welcome') === '1' && !dismissed) {
+    document.getElementById('welcome-modal').showModal();
+    history.replaceState({}, '', '/dashboard');
+  }
+})();
+
+function dismissWelcome(checkbox) {
+  if (checkbox.checked) {
+    localStorage.setItem('welcome_dismissed', '1');
+  } else {
+    localStorage.removeItem('welcome_dismissed');
+  }
+}
+
+// ── Revenue sparkline (pure JS canvas — no external lib) ───────────────────
+(function () {
+  var canvas = document.getElementById('revenue-chart');
+  if (!canvas) return;
+
+  // Generate deterministic 30-day fake data.
+  function seeded(n) {
+    var x = Math.sin(n + 1) * 10000;
+    return x - Math.floor(x);
+  }
+  var days = 30;
+  var data = [];
+  for (var i = 0; i < days; i++) {
+    var base = 35000;
+    var noise = (seeded(i * 3.7 + 0.4) - 0.5) * 22000;
+    // Weekends higher.
+    var d = new Date(); d.setDate(d.getDate() - (days - 1 - i));
+    if (d.getDay() === 0 || d.getDay() === 6) base += 12000;
+    data.push(Math.max(3000, base + noise));
+  }
+
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var W = rect.width, H = rect.height;
+    var pad = { t: 8, r: 8, b: 24, l: 8 };
+    var cw = W - pad.l - pad.r;
+    var ch = H - pad.t - pad.b;
+
+    var minV = Math.min.apply(null, data) * 0.9;
+    var maxV = Math.max.apply(null, data) * 1.05;
+
+    function xPos(i) { return pad.l + (i / (data.length - 1)) * cw; }
+    function yPos(v) { return pad.t + ch - ((v - minV) / (maxV - minV)) * ch; }
+
+    // Gradient fill.
+    var brand = getComputedStyle(document.documentElement).getPropertyValue('--brand-600').trim() || '#4f46e5';
+    var grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
+    grad.addColorStop(0, brand + '40');
+    grad.addColorStop(1, brand + '00');
+
+    // Draw fill area.
+    ctx.beginPath();
+    ctx.moveTo(xPos(0), yPos(data[0]));
+    for (var i = 1; i < data.length; i++) {
+      var cpx = (xPos(i - 1) + xPos(i)) / 2;
+      ctx.bezierCurveTo(cpx, yPos(data[i - 1]), cpx, yPos(data[i]), xPos(i), yPos(data[i]));
+    }
+    ctx.lineTo(xPos(data.length - 1), pad.t + ch);
+    ctx.lineTo(xPos(0), pad.t + ch);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Draw line.
+    ctx.beginPath();
+    ctx.moveTo(xPos(0), yPos(data[0]));
+    for (var i = 1; i < data.length; i++) {
+      var cpx = (xPos(i - 1) + xPos(i)) / 2;
+      ctx.bezierCurveTo(cpx, yPos(data[i - 1]), cpx, yPos(data[i]), xPos(i), yPos(data[i]));
+    }
+    ctx.strokeStyle = brand;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // X-axis labels (every 7 days).
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#6b7280';
+    ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = 0; i < data.length; i += 7) {
+      var d = new Date(); d.setDate(d.getDate() - (days - 1 - i));
+      var label = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      ctx.fillText(label, xPos(i), H - 4);
+    }
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+<style>
+/* ── Stat cards ── */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: box-shadow .15s, border-color .15s;
+}
+.stat-card:hover {
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-sm);
+}
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.stat-card-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stat-card-icon--blue   { background: var(--c-blue-bg);   color: var(--c-blue);   }
+.stat-card-icon--green  { background: var(--c-green-bg);  color: var(--c-green);  }
+.stat-card-icon--amber  { background: var(--c-amber-bg);  color: var(--c-amber);  }
+.stat-card-icon--purple { background: var(--c-purple-bg); color: var(--c-purple); }
+.stat-card-label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.stat-card-value { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: -.02em; }
+.stat-card-sub   { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+
+/* ── Alert banners ── */
+.alert-banner {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+}
+.alert-banner--danger  { background: var(--c-red-bg);   color: var(--c-red);   border: 1px solid rgba(239,68,68,.25); }
+.alert-banner--warning { background: var(--c-amber-bg); color: var(--c-amber); border: 1px solid rgba(245,158,11,.25); }
+.alert-banner svg { flex-shrink: 0; }
+.alert-banner-link { margin-left: auto; font-weight: 700; white-space: nowrap; color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── 3-col grid ── */
+.dash-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 1100px) { .dash-3col { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px)  { .dash-3col { grid-template-columns: 1fr; } }
+
+/* ── Quick actions ── */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px)  { .quick-actions-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px)  { .quick-actions-grid { grid-template-columns: repeat(2, 1fr); } }
+.quick-action {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.quick-action:hover {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+  transform: translateY(-1px);
+}
+.quick-action-icon  { font-size: 24px; margin-bottom: 2px; }
+.quick-action-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.quick-action-sub   { font-size: 11px; color: var(--muted); }
+
+/* ── Welcome modal ── */
+.welcome-modal {
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 90vw;
+  padding: 0;
+}
+.welcome-modal::backdrop { background: rgba(0,0,0,.6); backdrop-filter: blur(4px); }
+.welcome-inner { padding: 40px 36px; text-align: center; position: relative; }
+.welcome-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none; color: var(--muted);
+  font-size: 18px; cursor: pointer;
+  padding: 4px 8px; border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+.welcome-close:hover { background: var(--surface2); color: var(--text); }
+.welcome-icon { font-size: 48px; margin-bottom: 12px; }
+.welcome-inner h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px; font-weight: 800;
+  color: var(--text); margin-bottom: 8px; letter-spacing: -.02em;
+}
+.welcome-inner p { font-size: 14.5px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.welcome-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+.welcome-dismiss { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
+.welcome-dismiss input { width: auto; }
+</style>
 {{ end }}

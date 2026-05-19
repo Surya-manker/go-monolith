@@ -1,0 +1,81 @@
+{{ define "title" }}Reorder Suggestions{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>Reorder Suggestions</h1>
+		<p class="muted">Products at or below their reorder threshold. Suggested quantities based on 2× threshold − current stock.</p>
+	</div>
+	<a class="button" href="/procurement/orders/new">Create Purchase Order</a>
+</section>
+
+{{ if .Suggestions }}
+<section class="panel">
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th>
+				<th>SKU</th>
+				<th style="text-align:right">Stock</th>
+				<th style="text-align:right">Threshold</th>
+				<th style="text-align:right">Suggest Order</th>
+				<th>Last Supplier</th>
+				<th style="text-align:right">Last Price</th>
+				<th style="text-align:right">Est. Cost</th>
+				<th class="actions">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Suggestions }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right">
+					{{ if eq .CurrentStock 0 }}
+					<span class="badge badge--danger">Out of Stock</span>
+					{{ else }}
+					<span class="badge badge--warning">{{ .CurrentStock }}</span>
+					{{ end }}
+				</td>
+				<td style="text-align:right">{{ .LowStockThreshold }}</td>
+				<td style="text-align:right;font-weight:700;color:var(--brand-600)">{{ .SuggestedOrderQty }}</td>
+				<td>
+					{{ if .LastSupplierName }}
+					<a href="/suppliers/view?id={{ .LastSupplierID }}">{{ .LastSupplierName }}</a>
+					{{ else }}
+					<span class="muted">No history</span>
+					{{ end }}
+				</td>
+				<td style="text-align:right">
+					{{ if gt .LastPurchasePrice 0.0 }}Rs. {{ printf "%.2f" .LastPurchasePrice }}{{ else }}<span class="muted">—</span>{{ end }}
+				</td>
+				<td style="text-align:right">
+					{{ if gt .EstimatedCost 0.0 }}<strong>Rs. {{ printf "%.2f" .EstimatedCost }}</strong>{{ else }}<span class="muted">—</span>{{ end }}
+				</td>
+				<td class="actions">
+					<a class="link-button" href="/procurement/orders/new">Order</a>
+					<a class="link-button" href="/warehouses/stock/adjust?product_id={{ .ProductID }}">Adjust</a>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	<p class="muted" style="margin-top:8px;font-size:12px;text-align:right">{{ len .Suggestions }} products need restocking</p>
+</section>
+
+{{ if .Suppliers }}
+<section class="panel">
+	<h2 style="margin-bottom:8px">Quick Order Tip</h2>
+	<p class="muted">To place a bulk order with one supplier, go to <a href="/procurement/orders/new">New Purchase Order</a> and add multiple products at once.</p>
+</section>
+{{ end }}
+
+{{ else }}
+<div class="empty" style="padding:48px;text-align:center">
+	<p style="font-size:40px;margin-bottom:12px">✅</p>
+	<p style="font-weight:600;font-size:16px">All stock levels are healthy</p>
+	<p class="muted">No products are at or below their reorder threshold.</p>
+</div>
+{{ end }}
+{{ end }}

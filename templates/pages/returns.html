@@ -1,0 +1,73 @@
+{{ define "title" }}Returns{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Returns Management</h1>
+		<p class="muted">Process sales returns (customer → warehouse) and purchase returns (warehouse → supplier).</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button" href="/returns/sales/new">New Sales Return</a>
+		<a class="button button--muted" href="/returns/purchase/new">New Purchase Return</a>
+	</div>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<div><h2>↩ Sales Returns</h2><p class="muted">Customer returns</p></div>
+		<a class="text-link" href="/returns/sales">View all</a>
+	</div>
+	{{ if .SalesReturns }}
+	<table>
+		<thead><tr><th>Return #</th><th>Customer</th><th>Amount</th><th>Date</th></tr></thead>
+		<tbody>
+			{{ range .SalesReturns }}
+			<tr>
+				<td class="mono" style="font-size:12px">{{ .ReturnNumber }}</td>
+				<td>{{ if .CustomerName }}{{ .CustomerName }}{{ else }}<span class="muted">Walk-in</span>{{ end }}</td>
+				<td>Rs. {{ printf "%.2f" .TotalAmount }}</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06" }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:24px;text-align:center">
+		<p class="muted">No sales returns yet.</p>
+		<a href="/returns/sales/new" class="button button--sm" style="margin-top:8px">Create First Return</a>
+	</div>
+	{{ end }}
+</section>
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<div><h2>↪ Purchase Returns</h2><p class="muted">Returns to supplier</p></div>
+		<a class="text-link" href="/returns/purchase">View all</a>
+	</div>
+	{{ if .PurchaseReturns }}
+	<table>
+		<thead><tr><th>Return #</th><th>Vendor</th><th>Amount</th><th>Date</th></tr></thead>
+		<tbody>
+			{{ range .PurchaseReturns }}
+			<tr>
+				<td class="mono" style="font-size:12px">{{ .ReturnNumber }}</td>
+				<td>{{ .VendorName }}</td>
+				<td>Rs. {{ printf "%.2f" .TotalAmount }}</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06" }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:24px;text-align:center">
+		<p class="muted">No purchase returns yet.</p>
+		<a href="/returns/purchase/new" class="button button--sm" style="margin-top:8px">Create First Return</a>
+	</div>
+	{{ end }}
+</section>
+
+</div>
+{{ end }}

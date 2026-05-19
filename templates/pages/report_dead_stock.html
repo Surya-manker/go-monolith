@@ -1,0 +1,86 @@
+{{ define "title" }}Dead Stock Report{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Dead Stock</h1>
+		<p class="muted">Products with no stock movement in the selected period. These tie up capital.</p>
+	</div>
+	<a class="button button--muted" href="/reports">← Reports</a>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>No Movement For</span>
+			<select name="days" style="padding:5px 8px">
+				<option value="30" {{ if eq .Filter.Days 30 }}selected{{ end }}>30+ days</option>
+				<option value="60" {{ if eq .Filter.Days 60 }}selected{{ end }}>60+ days</option>
+				<option value="90" {{ if eq .Filter.Days 90 }}selected{{ end }}>90+ days</option>
+				<option value="180" {{ if eq .Filter.Days 180 }}selected{{ end }}>180+ days</option>
+			</select>
+		</label>
+		<div style="display:flex;align-items:flex-end;gap:6px">
+			<button class="button" type="submit">Apply</button>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=dead-stock&format=csv&days={{ .Filter.Days }}">↓ CSV</a>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=dead-stock&format=pdf&days={{ .Filter.Days }}">↓ PDF</a>
+		</div>
+	</form>
+</section>
+
+<section class="panel">
+	{{ if .Rows }}
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th>
+				<th>SKU</th>
+				<th>Warehouse</th>
+				<th style="text-align:right">Qty</th>
+				<th style="text-align:right">Cost Value</th>
+				<th>Last Movement</th>
+				<th>Days Stale</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Rows }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td>{{ .WarehouseName }}</td>
+				<td style="text-align:right">{{ .Quantity }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .CostValue }}</td>
+				<td>
+					{{ if .LastMovement }}
+					{{ .LastMovement.Format "02 Jan 2006" }}
+					{{ else }}
+					<span class="muted">Never</span>
+					{{ end }}
+				</td>
+				<td>
+					{{ if ge .DaysSince 180 }}
+					<span class="badge badge--danger">{{ .DaysSince }} days</span>
+					{{ else if ge .DaysSince 90 }}
+					<span class="badge badge--warning">{{ .DaysSince }} days</span>
+					{{ else }}
+					<span class="badge badge--pending">{{ .DaysSince }} days</span>
+					{{ end }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">✅</p>
+		<p style="font-weight:600">No dead stock!</p>
+		<p class="muted">All products have had movement in the last {{ .Filter.Days }} days.</p>
+	</div>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a,form{display:none!important} }</style>
+{{ end }}

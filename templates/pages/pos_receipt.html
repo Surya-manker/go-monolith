@@ -1,0 +1,144 @@
+{{ define "title" }}Receipt {{ .Sale.SaleNumber }}{{ end }}
+
+{{ define "content" }}
+<div style="max-width:420px;margin:0 auto">
+
+	{{/* Actions bar */}}
+	<div style="display:flex;gap:8px;margin-bottom:16px;no-print">
+		<button class="button" onclick="window.print()">🖨 Print Receipt</button>
+		<a class="button button--muted" href="/pos">← New Sale</a>
+		<a class="button button--muted" href="/pos/sales">Sales History</a>
+	</div>
+
+	{{/* Thermal receipt */}}
+	<div class="receipt" id="receipt">
+
+		{{/* Header */}}
+		<div class="receipt-header">
+			<div class="receipt-store">{{ .SellerName }}</div>
+			{{ if .SellerAddr }}<div class="receipt-addr">{{ .SellerAddr }}</div>{{ end }}
+			{{ if .GSTIN }}<div class="receipt-gstin">GSTIN: {{ .GSTIN }}</div>{{ end }}
+			<div class="receipt-divider">────────────────────────</div>
+			<div class="receipt-title">TAX INVOICE</div>
+			<div class="receipt-meta">{{ .Sale.SaleNumber }}</div>
+			<div class="receipt-meta">{{ .Sale.CreatedAt.Format "02 Jan 2006 15:04:05" }}</div>
+			{{ if .Sale.WarehouseName }}<div class="receipt-meta">Location: {{ .Sale.WarehouseName }}</div>{{ end }}
+			{{ if .Sale.CustomerName }}<div class="receipt-meta">Customer: {{ .Sale.CustomerName }}</div>{{ end }}
+			{{ if .Sale.CustomerPhone }}<div class="receipt-meta">Phone: {{ .Sale.CustomerPhone }}</div>{{ end }}
+			<div class="receipt-divider">────────────────────────</div>
+		</div>
+
+		{{/* Items */}}
+		<table class="receipt-items">
+			<thead>
+				<tr>
+					<th style="text-align:left">Item</th>
+					<th style="text-align:right">Qty</th>
+					<th style="text-align:right">Rate</th>
+					<th style="text-align:right">Amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .Sale.Items }}
+				<tr>
+					<td>
+						{{ .ProductName }}
+						{{ if .SKU }}<div style="font-size:10px;opacity:.6">{{ .SKU }}</div>{{ end }}
+					</td>
+					<td style="text-align:right">{{ .Quantity }}</td>
+					<td style="text-align:right">{{ printf "%.2f" .UnitPrice }}</td>
+					<td style="text-align:right"><strong>{{ printf "%.2f" .LineTotal }}</strong></td>
+				</tr>
+				{{ if gt .TaxAmount 0.0 }}
+				<tr style="font-size:10px;opacity:.6">
+					<td colspan="3" style="text-align:right">GST ({{ printf "%.0f" .TaxRate }}%)</td>
+					<td style="text-align:right">{{ printf "%.2f" .TaxAmount }}</td>
+				</tr>
+				{{ end }}
+				{{ end }}
+			</tbody>
+		</table>
+
+		<div class="receipt-divider">────────────────────────</div>
+
+		{{/* Totals */}}
+		<div class="receipt-totals">
+			<div class="receipt-total-row">
+				<span>Subtotal</span>
+				<span>Rs. {{ printf "%.2f" .Sale.Subtotal }}</span>
+			</div>
+			{{ if gt .Sale.TaxTotal 0.0 }}
+			<div class="receipt-total-row" style="opacity:.7">
+				<span>Tax (GST)</span>
+				<span>Rs. {{ printf "%.2f" .Sale.TaxTotal }}</span>
+			</div>
+			{{ end }}
+			{{ if gt .Sale.Discount 0.0 }}
+			<div class="receipt-total-row" style="color:#059669">
+				<span>Discount</span>
+				<span>-Rs. {{ printf "%.2f" .Sale.Discount }}</span>
+			</div>
+			{{ end }}
+			<div class="receipt-total-row receipt-grand-total">
+				<span>TOTAL</span>
+				<span>Rs. {{ printf "%.2f" .Sale.GrandTotal }}</span>
+			</div>
+			<div class="receipt-divider">────────────────────────</div>
+			<div class="receipt-total-row">
+				<span>Paid ({{ .Sale.PaymentMethod | upper }})</span>
+				<span>Rs. {{ printf "%.2f" .Sale.AmountPaid }}</span>
+			</div>
+			{{ if gt .Sale.ChangeGiven 0.0 }}
+			<div class="receipt-total-row" style="color:#2563eb">
+				<span>Change</span>
+				<span>Rs. {{ printf "%.2f" .Sale.ChangeGiven }}</span>
+			</div>
+			{{ end }}
+		</div>
+
+		<div class="receipt-divider">────────────────────────</div>
+		<div class="receipt-footer">
+			<div>Thank you for your purchase!</div>
+			<div style="margin-top:4px;opacity:.6;font-size:10px">Powered by InvoBill</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.receipt {
+	background:#fff; color:#111;
+	font-family: 'Courier New', Courier, monospace;
+	font-size:13px; line-height:1.5;
+	padding:20px 16px;
+	border:1px solid #ddd;
+	border-radius:8px;
+	max-width:380px;
+	margin:0 auto;
+}
+.receipt-header { text-align:center; margin-bottom:8px; }
+.receipt-store { font-size:18px; font-weight:700; }
+.receipt-addr, .receipt-gstin, .receipt-meta { font-size:11px; opacity:.7; }
+.receipt-title { font-size:14px; font-weight:700; letter-spacing:2px; margin:4px 0; }
+.receipt-divider { text-align:center; opacity:.4; margin:6px 0; }
+.receipt-items { width:100%; border-collapse:collapse; }
+.receipt-items th { font-size:11px; opacity:.6; padding:4px 0; border-bottom:1px solid #ddd; }
+.receipt-items td { padding:4px 2px; vertical-align:top; }
+.receipt-totals { margin:8px 0; }
+.receipt-total-row { display:flex; justify-content:space-between; padding:2px 0; font-size:13px; }
+.receipt-grand-total { font-size:16px; font-weight:700; padding:6px 0; }
+.receipt-footer { text-align:center; font-size:12px; padding-top:8px; }
+.no-print { }
+@media print {
+	.no-print { display:none !important; }
+	body { background:#fff; }
+	.sidebar, .mobile-topbar, header, nav { display:none !important; }
+	.main-content, main { margin:0 !important; padding:0 !important; }
+	.receipt { border:none; box-shadow:none; }
+}
+</style>
+
+<script>
+// Auto-print on load for thermal printers
+// Uncomment to auto-print: window.addEventListener('load', () => setTimeout(window.print, 800));
+</script>
+{{ end }}

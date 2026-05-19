@@ -35,9 +35,10 @@ func (a *App) Search(w http.ResponseWriter, r *http.Request) {
 		config services.ModuleConfig
 	}{}
 
+	bizID := a.bizID(r)
 	for _, key := range []string{"customers", "invoices", "products_search", "vendors", "categories", "payments"} {
 		if key == "products_search" {
-			products, _ := a.ProductService.List(q)
+			products, _ := a.ProductService.List(q, bizID)
 			for _, p := range products {
 				results = append(results, SearchResult{
 					Module: "Products",
@@ -49,7 +50,7 @@ func (a *App) Search(w http.ResponseWriter, r *http.Request) {
 			}
 			continue
 		}
-		cfg, ok := a.ModuleService.ConfigOnly(key)
+		cfg, ok := a.moduleService(r).ConfigOnly(key)
 		if !ok {
 			continue
 		}
@@ -62,7 +63,7 @@ func (a *App) Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, mod := range modules {
-		_, result, err := a.ModuleService.ListPaged(mod.key, 1, 5, q, "", "")
+		_, result, err := a.moduleService(r).ListPaged(mod.key, 1, 5, q, "", "", bizID)
 		if err != nil {
 			continue
 		}

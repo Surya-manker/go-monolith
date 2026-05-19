@@ -1,0 +1,50 @@
+{{ define "title" }}Edit Batch{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Batches</p>
+		<h1>Edit Batch</h1>
+		<p class="muted">Update batch number, lot, or expiry information.</p>
+	</div>
+	<a class="button button--muted" href="/batches">← All Batches</a>
+</section>
+
+<section class="panel" style="max-width:600px">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	{{ if .Batch }}
+	<div style="margin-bottom:16px;padding:12px;background:var(--surface-2);border-radius:8px">
+		<strong>{{ .Batch.ProductName }}</strong> ({{ .Batch.SKU }}) —
+		<span class="muted">{{ .Batch.WarehouseName }} · {{ .Batch.Quantity }} units</span>
+	</div>
+	<form class="grid-form" method="POST" action="/batches/update?id={{ .Batch.ID }}">
+		<label>
+			<span>Batch Number *</span>
+			<input type="text" name="batch_number" required value="{{ .Batch.BatchNumber }}">
+		</label>
+		<label>
+			<span>Lot Number</span>
+			<input type="text" name="lot_number" value="{{ .Batch.LotNumber }}">
+		</label>
+		<label>
+			<span>Mfg. Date</span>
+			<input type="date" name="mfg_date"
+				value="{{ if .Batch.MfgDate }}{{ .Batch.MfgDate.Format "2006-01-02" }}{{ end }}">
+		</label>
+		<label>
+			<span>Expiry Date</span>
+			<input type="date" name="expiry_date"
+				value="{{ if .Batch.ExpiryDate }}{{ .Batch.ExpiryDate.Format "2006-01-02" }}{{ end }}">
+		</label>
+		<label class="wide">
+			<span>Notes</span>
+			<input type="text" name="notes" value="{{ .Batch.Notes }}">
+		</label>
+		<div style="display:flex;gap:8px">
+			<button class="button" type="submit">Update Batch</button>
+			<a class="button button--muted" href="/batches">Cancel</a>
+		</div>
+	</form>
+	{{ end }}
+</section>
+{{ end }}

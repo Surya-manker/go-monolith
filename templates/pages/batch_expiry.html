@@ -1,0 +1,109 @@
+{{ define "title" }}Expiry Tracker{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Expiry Tracker</h1>
+		<p class="muted">Monitor expiring and expired stock. Write off expired batches to keep inventory accurate.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<form method="POST" action="/batches/write-off" style="display:inline">
+			<button class="button button--muted" type="submit"
+				onclick="return confirm('Mark all expired batches as written off?')">
+				Write Off Expired
+			</button>
+		</form>
+		<a class="button button--muted" href="/batches">All Batches</a>
+	</div>
+</section>
+
+{{/* Stats */}}
+<section class="metrics">
+	<article class="metric-card" style="{{ if .Stats.ExpiredCount }}border-color:#dc2626{{ end }}">
+		<span class="metric-label" style="{{ if .Stats.ExpiredCount }}color:#dc2626{{ end }}">Expired Batches</span>
+		<strong style="{{ if .Stats.ExpiredCount }}color:#dc2626{{ end }}">{{ .Stats.ExpiredCount }}</strong>
+		<p class="muted" style="margin-top:4px">{{ .Stats.ExpiredQty }} units total</p>
+	</article>
+	<article class="metric-card" style="{{ if .Stats.ExpiringCount }}border-color:#d97706{{ end }}">
+		<span class="metric-label" style="{{ if .Stats.ExpiringCount }}color:#d97706{{ end }}">Expiring in {{ .AlertDays }} days</span>
+		<strong style="{{ if .Stats.ExpiringCount }}color:#d97706{{ end }}">{{ .Stats.ExpiringCount }}</strong>
+		<p class="muted" style="margin-top:4px">{{ .Stats.ExpiringQty }} units</p>
+	</article>
+</section>
+
+{{/* Expiring Soon */}}
+{{ if .Expiring }}
+<section class="panel">
+	<div class="section-head">
+		<div>
+			<h2>⏰ Expiring Soon</h2>
+			<p class="muted">Within next {{ .AlertDays }} days</p>
+		</div>
+	</div>
+	<table>
+		<thead>
+			<tr><th>Product</th><th>Warehouse</th><th>Batch #</th><th>Expiry</th><th>Days Left</th><th>Qty</th></tr>
+		</thead>
+		<tbody>
+			{{ range .Expiring }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong><p class="cell-note mono">{{ .SKU }}</p></td>
+				<td>{{ .WarehouseName }}</td>
+				<td class="mono">{{ .BatchNumber }}</td>
+				<td>{{ .ExpiryDate.Format "02 Jan 2006" }}</td>
+				<td>
+					{{ if le .ExpiryDays 7 }}
+					<span class="badge badge--danger">{{ .ExpiryDays }} days</span>
+					{{ else }}
+					<span class="badge badge--warning">{{ .ExpiryDays }} days</span>
+					{{ end }}
+				</td>
+				<td><strong>{{ .Quantity }}</strong></td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}
+
+{{/* Expired */}}
+{{ if .Expired }}
+<section class="panel">
+	<div class="section-head">
+		<div>
+			<h2>🚫 Expired Stock</h2>
+			<p class="muted">These batches cannot be sold via POS</p>
+		</div>
+	</div>
+	<table>
+		<thead>
+			<tr><th>Product</th><th>Warehouse</th><th>Batch #</th><th>Expired On</th><th>Qty</th><th>Status</th></tr>
+		</thead>
+		<tbody>
+			{{ range .Expired }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong><p class="cell-note mono">{{ .SKU }}</p></td>
+				<td>{{ .WarehouseName }}</td>
+				<td class="mono">{{ .BatchNumber }}</td>
+				<td><span class="badge badge--danger">{{ .ExpiryDate.Format "02 Jan 2006" }}</span></td>
+				<td>{{ .Quantity }}</td>
+				<td>
+					{{ if eq .Status "expired" }}<span class="badge badge--draft">Written off</span>
+					{{ else }}<span class="badge badge--danger">Active (expired)</span>{{ end }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}
+
+{{ if and (not .Expiring) (not .Expired) }}
+<div class="empty" style="padding:48px;text-align:center">
+	<p style="font-size:40px;margin-bottom:12px">✅</p>
+	<p style="font-weight:600;font-size:16px">All stock is within expiry</p>
+	<p class="muted">No batches are expired or expiring within {{ .AlertDays }} days.</p>
+</div>
+{{ end }}
+{{ end }}

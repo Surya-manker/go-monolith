@@ -1,0 +1,140 @@
+{{ define "title" }}Warehouses{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Warehouses</h1>
+		<p class="muted">Manage storage locations and stock zones. The default warehouse is used for general stock adjustments.</p>
+	</div>
+	<a class="button button--muted" href="/warehouses/stock">View All Stock</a>
+</section>
+
+<section class="panel">
+	<h2 style="margin-bottom:14px">Add Warehouse</h2>
+	<form class="grid-form"
+		hx-post="/warehouses"
+		hx-target="#warehouses-table"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type=submit]">
+		<label>
+			<span>Name *</span>
+			<input type="text" name="name" required maxlength="255"
+				placeholder="e.g. Main Warehouse, North Store, Retail Floor">
+		</label>
+		<label>
+			<span>Manager Name</span>
+			<input type="text" name="manager_name" maxlength="255"
+				placeholder="Responsible person's name">
+		</label>
+		<label class="wide">
+			<span>Address / Location</span>
+			<input type="text" name="address" maxlength="500"
+				placeholder="Full address or brief location description">
+		</label>
+		<label style="display:flex;align-items:center;gap:8px">
+			<input type="checkbox" name="is_default" value="1" id="chk-default" style="width:auto;margin:0">
+			<span>Set as default warehouse</span>
+		</label>
+		<div>
+			<button class="button" type="submit">Add Warehouse</button>
+		</div>
+	</form>
+</section>
+
+<section class="panel">
+	<div id="warehouses-table">
+		{{ template "warehouses-table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "warehouses-table" }}
+{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+
+{{ if .Edit }}
+<div style="margin-bottom:16px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border)">
+	<p style="font-weight:600;margin-bottom:12px">Edit Warehouse</p>
+	<form class="grid-form"
+		hx-post="/warehouses/update?id={{ .Edit.ID }}"
+		hx-target="#warehouses-table"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type=submit]">
+		<label>
+			<span>Name *</span>
+			<input type="text" name="name" required maxlength="255" value="{{ .Edit.Name }}">
+		</label>
+		<label>
+			<span>Manager</span>
+			<input type="text" name="manager_name" maxlength="255" value="{{ .Edit.ManagerName }}">
+		</label>
+		<label class="wide">
+			<span>Address</span>
+			<input type="text" name="address" maxlength="500" value="{{ .Edit.Address }}">
+		</label>
+		<label style="display:flex;align-items:center;gap:8px">
+			<input type="checkbox" name="is_default" value="1" style="width:auto;margin:0"
+				{{ if .Edit.IsDefault }}checked{{ end }}>
+			<span>Default warehouse</span>
+		</label>
+		<div style="display:flex;gap:8px">
+			<button class="button" type="submit">Update</button>
+			<button class="button button--muted" type="button"
+				hx-get="/warehouses"
+				hx-target="#warehouses-table"
+				hx-swap="innerHTML">Cancel</button>
+		</div>
+	</form>
+</div>
+{{ end }}
+
+{{ if .Warehouses }}
+<table>
+	<thead>
+		<tr>
+			<th>Warehouse</th>
+			<th>Manager</th>
+			<th>Address</th>
+			<th>Status</th>
+			<th>Created</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Warehouses }}
+		<tr>
+			<td><strong>{{ .Name }}</strong></td>
+			<td>{{ if .ManagerName }}{{ .ManagerName }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td class="muted">{{ if .Address }}{{ .Address }}{{ else }}—{{ end }}</td>
+			<td>
+				{{ if .IsDefault }}
+					<span class="badge badge--success">Default</span>
+				{{ else }}
+					<span class="badge badge--draft">Secondary</span>
+				{{ end }}
+			</td>
+			<td class="muted">{{ .CreatedAt.Format "02 Jan 2006" }}</td>
+			<td class="actions">
+				<a class="link-button" href="/warehouses/stock?warehouse_id={{ .ID }}">Stock</a>
+				<button class="link-button"
+					hx-get="/warehouses/edit?id={{ .ID }}"
+					hx-target="#warehouses-table"
+					hx-swap="innerHTML">Edit</button>
+				<button class="link-button danger"
+					hx-post="/warehouses/delete?id={{ .ID }}"
+					hx-target="#warehouses-table"
+					hx-swap="innerHTML"
+					hx-confirm="Delete '{{ .Name }}'? This cannot be undone.">Delete</button>
+			</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">🏭</p>
+	<p style="font-weight:600;margin-bottom:4px">No warehouses yet</p>
+	<p class="muted">Add your first warehouse using the form above to start tracking location-wise stock.</p>
+</div>
+{{ end }}
+{{ end }}

@@ -1,0 +1,67 @@
+{{ define "title" }}{{ .Challan.ChallanNumber }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Delivery Challan</p>
+		<h1>{{ .Challan.ChallanNumber }}</h1>
+		<p class="muted">{{ .Challan.CustomerName }} · {{ .Challan.WarehouseName }}</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		{{ if eq .Challan.Status "dispatched" }}
+		<form method="POST" action="/crm/delivery/delivered?id={{ .Challan.ID }}" style="display:inline">
+			<button class="button" type="submit" style="background:#059669">✓ Mark as Delivered</button>
+		</form>
+		{{ end }}
+		<button class="button button--muted" onclick="window.print()">🖨 Print</button>
+		<a class="button button--muted" href="/crm/delivery">← Deliveries</a>
+	</div>
+</section>
+
+<section class="panel">
+	<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px">
+		<div>
+			<p class="muted" style="font-size:12px">Customer</p>
+			<p style="font-weight:600">{{ .Challan.CustomerName }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Sales Order</p>
+			<p>{{ if .Challan.OrderNumber }}<a class="mono" href="/crm/orders/view?id={{ .Challan.OrderID }}">{{ .Challan.OrderNumber }}</a>{{ else }}—{{ end }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Courier</p>
+			<p>{{ if .Challan.CourierName }}{{ .Challan.CourierName }}{{ else }}—{{ end }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Tracking Number</p>
+			<p class="mono">{{ if .Challan.TrackingNumber }}{{ .Challan.TrackingNumber }}{{ else }}—{{ end }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Dispatch Date</p>
+			<p>{{ if .Challan.DispatchDate }}{{ .Challan.DispatchDate.Format "02 Jan 2006" }}{{ else }}—{{ end }}</p>
+		</div>
+		<div>
+			<p class="muted" style="font-size:12px">Status</p>
+			{{ if eq .Challan.Status "dispatched" }}<span class="badge badge--warning">Dispatched</span>
+			{{ else if eq .Challan.Status "delivered" }}<span class="badge badge--active">Delivered on {{ if .Challan.DeliveryDate }}{{ .Challan.DeliveryDate.Format "02 Jan 2006" }}{{ end }}</span>
+			{{ else }}<span class="badge badge--draft">{{ .Challan.Status }}</span>{{ end }}
+		</div>
+	</div>
+
+	<table>
+		<thead><tr><th>Product</th><th>SKU</th><th style="text-align:right">Qty</th><th>Batch</th></tr></thead>
+		<tbody>
+			{{ range .Challan.Items }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right;font-weight:700">{{ .Quantity }}</td>
+				<td class="mono">{{ if .BatchNumber }}{{ .BatchNumber }}{{ else }}—{{ end }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child{display:none!important} }</style>
+{{ end }}

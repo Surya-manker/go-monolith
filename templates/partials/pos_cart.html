@@ -1,0 +1,141 @@
+{{ define "pos_cart" }}
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:16px">
+
+	{{/* Header */}}
+	<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+		<span style="font-weight:700;font-size:15px">
+			Cart
+			{{ if .Cart.Items }}
+				<span class="badge badge--info" style="margin-left:4px">{{ .Cart.ItemCount }}</span>
+			{{ end }}
+		</span>
+		{{ if .Cart.Items }}
+		<button class="link-button danger" style="font-size:12px"
+			hx-post="/pos/cart/clear"
+			hx-target="#pos-cart-panel"
+			hx-swap="innerHTML"
+			hx-confirm="Clear entire cart?"
+			hx-include="#warehouse-hidden">Clear</button>
+		{{ end }}
+	</div>
+
+	<input type="hidden" id="warehouse-hidden" name="warehouse_id" value="{{ .WarehouseID }}">
+
+	{{/* Items */}}
+	<div style="max-height:300px;overflow-y:auto">
+		{{ if .Cart.Items }}
+		{{ range .Cart.Items }}
+		<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
+			<div style="flex:1;min-width:0">
+				<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ .ProductName }}</div>
+				<div style="font-size:11px;color:var(--text-muted);font-family:monospace">{{ .SKU }}</div>
+				<div style="font-size:12px;margin-top:2px">
+					Rs. {{ printf "%.2f" .UnitPrice }}
+					{{ if gt .TaxRate 0.0 }}+{{ printf "%.0f" .TaxRate }}% tax{{ end }}
+					= <strong>Rs. {{ printf "%.2f" .LineTotal }}</strong>
+				</div>
+			</div>
+			<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+				<button class="qty-btn"
+					hx-post="/pos/cart/update"
+					hx-target="#pos-cart-panel"
+					hx-swap="innerHTML"
+					hx-vals='{"product_id":"{{ .ProductID }}","delta":"-1","warehouse_id":"{{ $.WarehouseID }}"}'>−</button>
+				<span style="min-width:24px;text-align:center;font-weight:700;font-size:14px">{{ .Quantity }}</span>
+				<button class="qty-btn"
+					hx-post="/pos/cart/update"
+					hx-target="#pos-cart-panel"
+					hx-swap="innerHTML"
+					hx-vals='{"product_id":"{{ .ProductID }}","delta":"1","warehouse_id":"{{ $.WarehouseID }}"}'>+</button>
+				<button class="qty-btn qty-btn--remove"
+					hx-post="/pos/cart/remove"
+					hx-target="#pos-cart-panel"
+					hx-swap="innerHTML"
+					hx-vals='{"product_id":"{{ .ProductID }}","warehouse_id":"{{ $.WarehouseID }}"}'>✕</button>
+			</div>
+		</div>
+		{{ end }}
+		{{ else }}
+		<div style="padding:32px 16px;text-align:center;color:var(--text-muted)">
+			<div style="font-size:28px;margin-bottom:8px">🛒</div>
+			<div style="font-size:13px">Scan a barcode or click a product to add</div>
+		</div>
+		{{ end }}
+	</div>
+
+	{{/* Totals + Checkout */}}
+	{{ if .Cart.Items }}
+	<div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--surface-2,var(--surface))">
+		<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+			<span style="color:var(--text-muted)">Subtotal</span>
+			<span>Rs. {{ printf "%.2f" .Cart.Subtotal }}</span>
+		</div>
+		{{ if gt .Cart.TaxTotal 0.0 }}
+		<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;color:var(--text-muted)">
+			<span>Tax (GST)</span>
+			<span>Rs. {{ printf "%.2f" .Cart.TaxTotal }}</span>
+		</div>
+		{{ end }}
+		<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding-top:8px;border-top:1px solid var(--border);margin-top:4px">
+			<span>Grand Total</span>
+			<span style="color:var(--brand-600)">Rs. {{ printf "%.2f" .Cart.GrandTotal }}</span>
+		</div>
+	</div>
+
+	<form method="POST" action="/pos/checkout" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+		<input type="hidden" name="warehouse_id" value="{{ .WarehouseID }}">
+		<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+			<label class="pos-label">
+				<span>Customer</span>
+				<input name="customer_name" placeholder="Walk-in">
+			</label>
+			<label class="pos-label">
+				<span>Phone</span>
+				<input name="customer_phone" placeholder="+91…">
+			</label>
+		</div>
+		<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+			<label class="pos-label">
+				<span>Payment</span>
+				<select name="payment_method">
+					<option value="cash">💵 Cash</option>
+					<option value="upi">📱 UPI</option>
+					<option value="card">💳 Card</option>
+					<option value="cheque">📋 Cheque</option>
+				</select>
+			</label>
+			<label class="pos-label">
+				<span>Amount Paid</span>
+				<input name="amount_paid" type="number" step="0.01" min="0"
+					value="{{ printf "%.2f" .Cart.GrandTotal }}"
+					style="font-weight:700">
+			</label>
+		</div>
+		<label class="pos-label">
+			<span>Discount (Rs.)</span>
+			<input name="discount" type="number" step="0.01" min="0" value="0">
+		</label>
+		<button type="submit" class="button"
+			style="width:100%;font-size:15px;padding:12px;margin-top:4px;font-weight:700">
+			✓ Checkout — Rs. {{ printf "%.2f" .Cart.GrandTotal }}
+		</button>
+	</form>
+	{{ end }}
+</div>
+
+<style>
+.qty-btn {
+	width:26px; height:26px; border-radius:5px;
+	border:1px solid var(--border);
+	background:var(--surface);
+	cursor:pointer; font-size:16px; line-height:1;
+	display:flex; align-items:center; justify-content:center;
+}
+.qty-btn:hover { background:var(--surface-2); }
+.qty-btn--remove { color:#dc2626; margin-left:4px; font-size:12px; }
+.pos-label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--text-muted); }
+.pos-label input, .pos-label select { padding:6px 8px; font-size:13px; }
+</style>
+{{ end }}
+
+{{ template "pos_cart" . }}

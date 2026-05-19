@@ -1,0 +1,88 @@
+{{ define "title" }}New Purchase Return{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Returns</p>
+		<h1>New Purchase Return</h1>
+		<p class="muted">Return goods to supplier. Stock will be deducted from the selected warehouse.</p>
+	</div>
+	<a class="button button--muted" href="/returns">← Back</a>
+</section>
+
+<section class="panel" style="max-width:900px">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<form method="POST" action="/returns/purchase" id="pur-return-form">
+		<div class="grid-form" style="margin-bottom:16px">
+			<label>
+				<span>Warehouse *</span>
+				<select name="warehouse_id" required>
+					<option value="">— Select warehouse —</option>
+					{{ range .Warehouses }}
+					<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} ★{{ end }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Vendor / Supplier *</span>
+				<input type="text" name="vendor_name" required placeholder="Supplier name">
+			</label>
+			<label class="wide">
+				<span>Return Reason</span>
+				<input type="text" name="return_reason" placeholder="Defective goods, wrong shipment, quality issue…">
+			</label>
+		</div>
+
+		<h3 style="margin-bottom:10px">Return Items</h3>
+		<div id="pur-return-items">
+			<div class="return-item-row">
+				<select name="product_id[]" required style="flex:2">
+					<option value="">— Product —</option>
+					{{ range .Products }}
+					<option value="{{ .ID }}">{{ .Name }} ({{ .SKU }})</option>
+					{{ end }}
+				</select>
+				<select name="batch_id[]" style="flex:1.5">
+					<option value="">— Batch (opt.) —</option>
+					{{ range .Batches }}
+					{{ if eq .Status "active" }}
+					<option value="{{ .ID }}">{{ .BatchNumber }} ({{ .ProductName }}, {{ .Quantity }}u)</option>
+					{{ end }}
+					{{ end }}
+				</select>
+				<input type="number" name="quantity[]" placeholder="Qty" min="1" required style="flex:.7">
+				<input type="number" name="unit_price[]" placeholder="Cost" step="0.01" min="0" style="flex:1">
+				<input type="text" name="notes[]" placeholder="Note" style="flex:2">
+				<button type="button" class="link-button danger" onclick="removePurRow(this)">✕</button>
+			</div>
+		</div>
+
+		<button type="button" class="button button--muted button--sm" style="margin:10px 0" onclick="addPurRow()">
+			+ Add Item
+		</button>
+
+		<div style="margin-top:16px;display:flex;gap:8px">
+			<button class="button" type="submit">Create Return</button>
+			<a class="button button--muted" href="/returns">Cancel</a>
+		</div>
+	</form>
+</section>
+
+<style>
+.return-item-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.return-item-row select, .return-item-row input { padding:6px 8px; font-size:13px; }
+</style>
+<script>
+function addPurRow() {
+	var first = document.querySelector('#pur-return-items .return-item-row');
+	var clone = first.cloneNode(true);
+	clone.querySelectorAll('input').forEach(function(i) { i.value = ''; });
+	clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+	document.getElementById('pur-return-items').appendChild(clone);
+}
+function removePurRow(btn) {
+	var rows = document.querySelectorAll('#pur-return-items .return-item-row');
+	if (rows.length > 1) btn.closest('.return-item-row').remove();
+}
+</script>
+{{ end }}

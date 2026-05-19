@@ -1,0 +1,97 @@
+{{ define "title" }}Stock Movement Report{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Stock Movement</h1>
+		<p class="muted">All stock in/out transactions with warehouse and type breakdown.</p>
+	</div>
+	<a class="button button--muted" href="/reports">← Reports</a>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .Filter.From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .Filter.To }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>Warehouse</span>
+			<select name="warehouse_id" style="padding:5px 8px">
+				<option value="0">All</option>
+				{{ range .Warehouses }}
+				<option value="{{ .ID }}" {{ if eq $.Filter.WarehouseID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>Product</span>
+			<select name="product_id" style="padding:5px 8px">
+				<option value="0">All</option>
+				{{ range .Products }}
+				<option value="{{ .ID }}" {{ if eq $.Filter.ProductID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<div style="display:flex;align-items:flex-end;gap:6px">
+			<button class="button" type="submit">Apply</button>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=stock-movement&format=csv&from={{ .Filter.From }}&to={{ .Filter.To }}&warehouse_id={{ .Filter.WarehouseID }}&product_id={{ .Filter.ProductID }}">↓ CSV</a>
+		</div>
+	</form>
+</section>
+
+<section class="panel">
+	{{ if .Rows }}
+	<p class="muted" style="margin-bottom:8px;font-size:12px">{{ len .Rows }} movements (showing latest 1000)</p>
+	<table>
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Product</th>
+				<th>Warehouse</th>
+				<th>Type</th>
+				<th style="text-align:right">Before</th>
+				<th style="text-align:right">Change</th>
+				<th style="text-align:right">After</th>
+				<th>Note</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Rows }}
+			<tr>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06 15:04" }}</td>
+				<td>{{ .ProductName }}<p class="cell-note mono">{{ .SKU }}</p></td>
+				<td>{{ .WarehouseName }}</td>
+				<td>
+					{{ if eq .ChangeType "purchase" }}<span class="badge badge--active">Purchase</span>
+					{{ else if eq .ChangeType "sale" }}<span class="badge badge--info">Sale</span>
+					{{ else if eq .ChangeType "return" }}<span class="badge badge--active">Return</span>
+					{{ else if eq .ChangeType "damage" }}<span class="badge badge--warning">Damage</span>
+					{{ else if eq .ChangeType "adjustment" }}<span class="badge badge--draft">Adjust</span>
+					{{ else if eq .ChangeType "transfer_out" }}<span class="badge badge--draft">Transfer Out</span>
+					{{ else if eq .ChangeType "transfer_in" }}<span class="badge badge--active">Transfer In</span>
+					{{ else }}<span class="badge badge--draft">{{ .ChangeType }}</span>{{ end }}
+				</td>
+				<td style="text-align:right">{{ .QuantityBefore }}</td>
+				<td style="text-align:right;{{ if gt .QuantityChange 0 }}color:#059669;font-weight:700{{ else }}color:#dc2626;font-weight:700{{ end }}">
+					{{ if gt .QuantityChange 0 }}+{{ end }}{{ .QuantityChange }}
+				</td>
+				<td style="text-align:right;font-weight:600">{{ .QuantityAfter }}</td>
+				<td class="muted">{{ if .Note }}{{ .Note }}{{ else }}—{{ end }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p>No stock movements in selected range.</p>
+	</div>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a,form{display:none!important} }</style>
+{{ end }}

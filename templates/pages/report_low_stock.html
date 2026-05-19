@@ -1,0 +1,60 @@
+{{ define "title" }}Low Stock Report{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Low Stock</h1>
+		<p class="muted">Products at or below their reorder threshold. Order immediately.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" target="_blank" href="/reports/export?type=low-stock&format=csv">↓ CSV</a>
+		<a class="button button--muted" href="/reports">← Reports</a>
+	</div>
+</section>
+
+<section class="panel">
+	{{ if .Rows }}
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th>
+				<th>SKU</th>
+				<th style="text-align:right">Current Stock</th>
+				<th style="text-align:right">Threshold</th>
+				<th style="text-align:right">Short By</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Rows }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right">
+					{{ if eq .CurrentStock 0 }}
+					<span class="badge badge--danger">Out of Stock</span>
+					{{ else }}
+					<span class="badge badge--warning">{{ .CurrentStock }}</span>
+					{{ end }}
+				</td>
+				<td style="text-align:right">{{ .LowStockThreshold }}</td>
+				<td style="text-align:right;color:#dc2626;font-weight:700">{{ .ShortBy }}</td>
+				<td>
+					<a class="link-button" href="/products/stock?id={{ .ProductID }}">Adjust</a>
+					<a class="link-button" href="/purchase-orders">Order</a>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">✅</p>
+		<p style="font-weight:600">All products well stocked</p>
+	</div>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a{display:none!important} }</style>
+{{ end }}

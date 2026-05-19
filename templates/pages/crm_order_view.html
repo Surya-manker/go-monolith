@@ -1,0 +1,98 @@
+{{ define "title" }}{{ .Order.OrderNumber }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Sales Order</p>
+		<h1>{{ .Order.OrderNumber }}</h1>
+		<p class="muted">{{ .Order.CustomerName }} · {{ .Order.WarehouseName }}</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		{{ if eq .Order.Status "draft" }}
+		<form method="POST" action="/crm/orders/confirm?id={{ .Order.ID }}" style="display:inline">
+			<button class="button" type="submit" style="background:#2563eb">✓ Confirm & Reserve Stock</button>
+		</form>
+		{{ end }}
+		{{ if eq .Order.Status "confirmed" }}
+		<form method="POST" action="/crm/orders/pack?id={{ .Order.ID }}" style="display:inline">
+			<button class="button button--muted" type="submit">Mark Packed</button>
+		</form>
+		<a class="button" href="/crm/delivery/new?order_id={{ .Order.ID }}">Create Delivery Challan</a>
+		{{ end }}
+		{{ if eq .Order.Status "packed" }}
+		<a class="button" href="/crm/delivery/new?order_id={{ .Order.ID }}">Create Delivery Challan</a>
+		{{ end }}
+		{{ if and (ne .Order.Status "completed") (ne .Order.Status "cancelled") (ne .Order.Status "dispatched") (ne .Order.Status "delivered") }}
+		<form method="POST" action="/crm/orders/cancel?id={{ .Order.ID }}" style="display:inline">
+			<button class="button button--muted" type="submit" onclick="return confirm('Cancel this order and release stock reservation?')">Cancel</button>
+		</form>
+		{{ end }}
+		<button class="button button--muted" onclick="window.print()">🖨</button>
+		<a class="button button--muted" href="/crm/orders">← Orders</a>
+	</div>
+</section>
+
+{{/* Status */}}
+<section class="panel" style="padding:10px 16px">
+	<div style="display:flex;align-items:center;gap:12px">
+		{{ if eq .Order.Status "draft" }}<span class="badge badge--draft">Draft</span><span class="muted" style="font-size:13px">Confirm to reserve warehouse stock</span>
+		{{ else if eq .Order.Status "confirmed" }}<span class="badge badge--info">Confirmed</span><span class="muted" style="font-size:13px">Stock reserved — ready to pack</span>
+		{{ else if eq .Order.Status "packed" }}<span class="badge badge--pending">Packed</span><span class="muted" style="font-size:13px">Ready for dispatch</span>
+		{{ else if eq .Order.Status "dispatched" }}<span class="badge badge--warning">Dispatched</span><span class="muted" style="font-size:13px">Stock deducted — in transit</span>
+		{{ else if eq .Order.Status "delivered" }}<span class="badge badge--active">Delivered</span>
+		{{ else if eq .Order.Status "completed" }}<span class="badge badge--active">Completed</span>
+		{{ else if eq .Order.Status "cancelled" }}<span class="badge badge--danger">Cancelled</span><span class="muted" style="font-size:13px">Stock reservation released</span>
+		{{ end }}
+	</div>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+<section class="panel" style="margin:0">
+	<table>
+		<tr><td class="muted">Customer</td><td><strong>{{ .Order.CustomerName }}</strong></td></tr>
+		<tr><td class="muted">Warehouse</td><td>{{ .Order.WarehouseName }}</td></tr>
+		{{ if .Order.DeliveryDate }}<tr><td class="muted">Delivery Date</td><td>{{ .Order.DeliveryDate.Format "02 Jan 2006" }}</td></tr>{{ end }}
+		{{ if .Order.ShippingAddress }}<tr><td class="muted">Ship To</td><td>{{ .Order.ShippingAddress }}</td></tr>{{ end }}
+		{{ if .Order.Notes }}<tr><td class="muted">Notes</td><td>{{ .Order.Notes }}</td></tr>{{ end }}
+	</table>
+</section>
+<section class="panel" style="margin:0">
+	<table>
+		<tr><td class="muted">Subtotal</td><td style="text-align:right">Rs. {{ printf "%.2f" .Order.Subtotal }}</td></tr>
+		<tr><td class="muted">Tax</td><td style="text-align:right">Rs. {{ printf "%.2f" .Order.TaxTotal }}</td></tr>
+		{{ if gt .Order.Discount 0.0 }}<tr><td class="muted">Discount</td><td style="text-align:right">-Rs. {{ printf "%.2f" .Order.Discount }}</td></tr>{{ end }}
+		<tr style="font-weight:700"><td>Grand Total</td><td style="text-align:right;color:var(--brand-600)">Rs. {{ printf "%.2f" .Order.GrandTotal }}</td></tr>
+		<tr><td class="muted">Paid</td><td style="text-align:right;color:#059669">Rs. {{ printf "%.2f" .Order.TotalPaid }}</td></tr>
+		{{ if gt .Order.OutstandingDue 0.0 }}
+		<tr style="font-weight:600"><td class="muted">Due</td><td style="text-align:right;color:#dc2626">Rs. {{ printf "%.2f" .Order.OutstandingDue }}</td></tr>
+		{{ end }}
+	</table>
+</section>
+</div>
+
+<section class="panel">
+	<h2 style="margin-bottom:12px">Order Items</h2>
+	<table>
+		<thead><tr><th>Product</th><th>SKU</th><th style="text-align:right">Ordered</th><th style="text-align:right">Reserved</th><th style="text-align:right">Delivered</th><th style="text-align:right">Pending</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead>
+		<tbody>
+			{{ range .Order.Items }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right">{{ .Quantity }}</td>
+				<td style="text-align:right;color:#2563eb">{{ .ReservedQty }}</td>
+				<td style="text-align:right;color:#059669">{{ .DeliveredQty }}</td>
+				<td style="text-align:right">
+					{{ if gt .PendingQty 0 }}<span class="badge badge--warning">{{ .PendingQty }}</span>
+					{{ else }}<span class="badge badge--active">Done</span>{{ end }}
+				</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .UnitPrice }}</td>
+				<td style="text-align:right;font-weight:600">Rs. {{ printf "%.2f" .LineTotal }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child{display:none!important} }</style>
+{{ end }}

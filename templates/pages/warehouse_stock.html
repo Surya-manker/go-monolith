@@ -1,0 +1,144 @@
+{{ define "title" }}Warehouse Stock{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Warehouse Stock</h1>
+		<p class="muted">View and adjust stock per warehouse location. Select a tab to filter by location.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" href="/transfers">Stock Transfers</a>
+		<a class="button button--muted" href="/warehouses">Warehouses</a>
+	</div>
+</section>
+
+{{/* ── Warehouse filter tabs ── */}}
+<section class="panel" style="padding:12px 16px">
+	<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+		<a class="button {{ if eq .SelectedID 0 }}button--primary{{ else }}button--muted{{ end }} button--sm"
+			href="/warehouses/stock">All Warehouses</a>
+		{{ range .Warehouses }}
+		<a class="button {{ if eq $.SelectedID .ID }}button--primary{{ else }}button--muted{{ end }} button--sm"
+			href="/warehouses/stock?warehouse_id={{ .ID }}">
+			{{ .Name }}{{ if .IsDefault }} ★{{ end }}
+		</a>
+		{{ end }}
+		{{ if not .Warehouses }}
+		<span class="muted" style="font-size:13px">No warehouses yet — <a href="/warehouses">Add one</a></span>
+		{{ end }}
+	</div>
+</section>
+
+{{/* ── Stock Adjust Form — only when a specific warehouse is selected ── */}}
+{{ if gt .SelectedID 0 }}
+<section class="panel">
+	<h2 style="margin-bottom:14px">Adjust Stock</h2>
+	{{ if .Products }}
+	<form class="grid-form"
+		hx-post="/warehouses/stock/adjust?warehouse_id={{ .SelectedID }}"
+		hx-target="#stock-table-wrap"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type=submit]">
+		<input type="hidden" name="warehouse_id" value="{{ .SelectedID }}">
+		<label>
+			<span>Product *</span>
+			<select name="product_id" required>
+				<option value="">— Select product —</option>
+				{{ range .Products }}
+				<option value="{{ .ID }}">{{ .Name }}{{ if .SKU }} ({{ .SKU }}){{ end }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Change Type *</span>
+			<select name="change_type" required>
+				<option value="purchase">📦 Purchase / Stock In</option>
+				<option value="opening">🔓 Opening Stock</option>
+				<option value="return">↩ Return</option>
+				<option value="adjustment">⚙ Manual Adjustment</option>
+				<option value="sale">🛒 Sale / Stock Out</option>
+				<option value="damage">⚠ Damage / Loss</option>
+			</select>
+		</label>
+		<label>
+			<span>Quantity * <small class="muted">(negative = deduction)</small></span>
+			<input type="number" name="quantity_change" required
+				placeholder="+50 to add, -10 to deduct"
+				style="font-size:15px;font-weight:600">
+		</label>
+		<label>
+			<span>Note / Reference</span>
+			<input type="text" name="note" maxlength="255"
+				placeholder="PO number, reason, or invoice ref (optional)">
+		</label>
+		<div>
+			<button class="button" type="submit">Adjust Stock</button>
+		</div>
+	</form>
+	{{ else }}
+	<div class="empty" style="padding:12px">
+		No products found. <a href="/products">Add products</a> first before adjusting stock.
+	</div>
+	{{ end }}
+</section>
+{{ end }}
+
+{{/* ── Stock Table ── */}}
+<section class="panel">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<div id="stock-table-wrap">
+		{{ template "warehouse_stock_table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "warehouse_stock_table" }}
+{{ if .Stock }}
+<table>
+	<thead>
+		<tr>
+			{{ if eq .SelectedID 0 }}<th>Warehouse</th>{{ end }}
+			<th>Product</th>
+			<th>SKU</th>
+			<th>Barcode</th>
+			<th>Unit</th>
+			<th>Quantity</th>
+			<th>Last Updated</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Stock }}
+		<tr>
+			{{ if eq $.SelectedID 0 }}<td><strong>{{ .WarehouseName }}</strong></td>{{ end }}
+			<td>{{ .ProductName }}</td>
+			<td class="mono">{{ .SKU }}</td>
+			<td class="mono">{{ if .Barcode }}{{ .Barcode }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td>{{ .Unit }}</td>
+			<td>
+				{{ if eq .Quantity 0 }}
+					<span class="badge badge--overdue">Out of Stock</span>
+				{{ else if le .Quantity 5 }}
+					<span class="badge badge--pending">{{ .Quantity }} {{ .Unit }}</span>
+				{{ else }}
+					<span class="badge badge--active">{{ .Quantity }} {{ .Unit }}</span>
+				{{ end }}
+			</td>
+			<td class="muted" style="font-size:12px">{{ .UpdatedAt.Format "02 Jan 2006 15:04" }}</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+<p class="muted" style="margin-top:8px;font-size:12px;text-align:right">{{ len .Stock }} product(s)</p>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">📦</p>
+	<p style="font-weight:600;margin-bottom:4px">No stock records</p>
+	{{ if gt .SelectedID 0 }}
+	<p class="muted">This warehouse has no stock yet. Use "Adjust Stock" above to add opening stock.</p>
+	{{ else }}
+	<p class="muted">Select a warehouse tab and add stock using the Adjust form.</p>
+	{{ end }}
+</div>
+{{ end }}
+{{ end }}

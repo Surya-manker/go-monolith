@@ -1,0 +1,118 @@
+{{ define "title" }}Ledger{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>
+			{{ if eq .LedgerType "customer" }}Customer Ledger
+			{{ else if eq .LedgerType "supplier" }}Supplier Ledger
+			{{ else }}Cash Ledger{{ end }}
+		</h1>
+		<p class="muted">Running balance from all invoices, payments, and returns.</p>
+	</div>
+	<a class="button button--muted" href="/finance">← Finance</a>
+</section>
+
+{{/* Type tabs */}}
+<section class="panel" style="padding:12px 16px">
+	<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+		<a class="button {{ if eq .LedgerType "cash" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/finance/ledger?type=cash">Cash Ledger</a>
+		<a class="button {{ if eq .LedgerType "customer" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/finance/ledger?type=customer">Customer Ledger</a>
+		<a class="button {{ if eq .LedgerType "supplier" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/finance/ledger?type=supplier">Supplier Ledger</a>
+	</div>
+</section>
+
+{{/* Filter */}}
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<input type="hidden" name="type" value="{{ .LedgerType }}">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .To }}" style="padding:5px 8px">
+		</label>
+		{{ if eq .LedgerType "customer" }}
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>Customer</span>
+			<select name="customer_id" style="padding:5px 8px">
+				<option value="0">— Select customer —</option>
+				{{ range .Customers }}
+				<option value="{{ .ID }}" {{ if eq $.CustomerID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</label>
+		{{ end }}
+		{{ if eq .LedgerType "supplier" }}
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>Supplier</span>
+			<select name="supplier_id" style="padding:5px 8px">
+				<option value="0">— Select supplier —</option>
+				{{ range .Suppliers }}
+				<option value="{{ .ID }}" {{ if eq $.SupplierID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</label>
+		{{ end }}
+		<div style="display:flex;align-items:flex-end;gap:6px">
+			<button class="button" type="submit">Apply</button>
+			<a class="button button--muted" target="_blank"
+				href="/finance/ledger?type={{ .LedgerType }}&from={{ .From }}&to={{ .To }}&customer_id={{ .CustomerID }}&supplier_id={{ .SupplierID }}&format=csv">↓ CSV</a>
+		</div>
+	</form>
+</section>
+
+<section class="panel">
+	{{ if .Entries }}
+	<table>
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Description</th>
+				<th>Reference</th>
+				<th style="text-align:right">Credit</th>
+				<th style="text-align:right">Debit</th>
+				<th style="text-align:right">Balance</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Entries }}
+			<tr>
+				<td class="muted" style="font-size:12px">{{ .TxnDate.Format "02 Jan 2006" }}</td>
+				<td>{{ .Description }}</td>
+				<td class="mono" style="font-size:12px">{{ .RefNumber }}</td>
+				<td style="text-align:right;{{ if gt .Credit 0.0 }}color:#059669;font-weight:600{{ end }}">
+					{{ if gt .Credit 0.0 }}Rs. {{ printf "%.2f" .Credit }}{{ else }}—{{ end }}
+				</td>
+				<td style="text-align:right;{{ if gt .Debit 0.0 }}color:#dc2626;font-weight:600{{ end }}">
+					{{ if gt .Debit 0.0 }}Rs. {{ printf "%.2f" .Debit }}{{ else }}—{{ end }}
+				</td>
+				<td style="text-align:right;font-weight:700;{{ if lt .Balance 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+					Rs. {{ printf "%.2f" .Balance }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+		<tfoot>
+			<tr style="font-weight:700;background:var(--surface-2)">
+				<td colspan="5" style="text-align:right">Closing Balance</td>
+				<td style="text-align:right;{{ if lt .Closing 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+					Rs. {{ printf "%.2f" .Closing }}
+				</td>
+			</tr>
+		</tfoot>
+	</table>
+	{{ else if or (eq .LedgerType "customer") (eq .LedgerType "supplier") }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p class="muted">Select a {{ .LedgerType }} and date range to view the ledger.</p>
+	</div>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p class="muted">No cash transactions in the selected period.</p>
+	</div>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a,form{display:none!important} }</style>
+{{ end }}

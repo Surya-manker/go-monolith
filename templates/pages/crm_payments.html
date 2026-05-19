@@ -1,0 +1,98 @@
+{{ define "title" }}Customer Payments{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>Customer Payments</h1>
+		<p class="muted">Record and track customer payments. Total collected: Rs. {{ printf "%.2f" .TotalPaid }}</p>
+	</div>
+	<a class="button button--muted" href="/crm">← CRM</a>
+</section>
+
+<section class="panel">
+	<h2 style="margin-bottom:14px">Record Payment</h2>
+	<form class="grid-form" method="POST" action="/crm/payments">
+		<label>
+			<span>Customer *</span>
+			<select name="customer_id" required>
+				<option value="">— Select customer —</option>
+				{{ range .Customers }}
+				<option value="{{ .ID }}" {{ if eq $.CustomerID .ID }}selected{{ end }}>
+					{{ .Name }} (Due: Rs. {{ printf "%.0f" .OutstandingDue }})
+				</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Against Order (optional)</span>
+			<select name="order_id">
+				<option value="0">— General payment —</option>
+				{{ range .Orders }}
+				{{ if ne .Status "cancelled" }}
+				<option value="{{ .ID }}">{{ .OrderNumber }} — Rs. {{ printf "%.0f" .GrandTotal }}</option>
+				{{ end }}
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Amount (Rs.) *</span>
+			<input type="number" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+		</label>
+		<label>
+			<span>Payment Type</span>
+			<select name="payment_type">
+				<option value="regular">Regular Payment</option>
+				<option value="advance">Advance Payment</option>
+				<option value="refund">Refund</option>
+			</select>
+		</label>
+		<label>
+			<span>Payment Method</span>
+			<select name="payment_method">
+				<option value="cash">💵 Cash</option>
+				<option value="upi">📱 UPI</option>
+				<option value="card">💳 Card</option>
+				<option value="bank_transfer">🏦 Bank Transfer</option>
+				<option value="cheque">📋 Cheque</option>
+			</select>
+		</label>
+		<label>
+			<span>Reference / UTR</span>
+			<input type="text" name="reference" placeholder="Transaction ID, cheque no.">
+		</label>
+		<label class="wide">
+			<span>Notes</span>
+			<input type="text" name="notes">
+		</label>
+		<div><button class="button" type="submit">Record Payment</button></div>
+	</form>
+</section>
+
+<section class="panel">
+	{{ if .Payments }}
+	<table>
+		<thead>
+			<tr><th>Payment #</th><th>Customer</th><th>Order</th><th>Type</th><th style="text-align:right">Amount</th><th>Method</th><th>Date</th></tr>
+		</thead>
+		<tbody>
+			{{ range .Payments }}
+			<tr>
+				<td class="mono">{{ .PaymentNumber }}</td>
+				<td>{{ .CustomerName }}</td>
+				<td class="mono">{{ if .OrderNumber }}{{ .OrderNumber }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td><span class="badge badge--draft">{{ .PaymentType }}</span></td>
+				<td style="text-align:right;font-weight:600">Rs. {{ printf "%.2f" .Amount }}</td>
+				<td>{{ .PaymentMethod }}</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 2006" }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p>No customer payments recorded yet.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

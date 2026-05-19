@@ -1,0 +1,69 @@
+{{ define "title" }}Sales Orders{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>Sales Orders</h1>
+		<p class="muted">Full order lifecycle: draft → confirmed (reserves stock) → packed → dispatched → delivered.</p>
+	</div>
+	<a class="button" href="/crm/orders/new">New Order</a>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<div style="display:flex;gap:6px;flex-wrap:wrap">
+		<a class="button {{ if eq .StatusFilter "" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders">All</a>
+		<a class="button {{ if eq .StatusFilter "draft" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=draft">Draft</a>
+		<a class="button {{ if eq .StatusFilter "confirmed" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=confirmed">Confirmed</a>
+		<a class="button {{ if eq .StatusFilter "packed" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=packed">Packed</a>
+		<a class="button {{ if eq .StatusFilter "dispatched" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=dispatched">Dispatched</a>
+		<a class="button {{ if eq .StatusFilter "delivered" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=delivered">Delivered</a>
+		<a class="button {{ if eq .StatusFilter "completed" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=completed">Completed</a>
+		<a class="button {{ if eq .StatusFilter "cancelled" }}button--primary{{ else }}button--muted{{ end }} button--sm" href="/crm/orders?status=cancelled">Cancelled</a>
+	</div>
+</section>
+
+<section class="panel">
+	{{ if .Orders }}
+	<table>
+		<thead>
+			<tr><th>Order #</th><th>Customer</th><th>Warehouse</th><th>Delivery</th><th style="text-align:right">Total</th><th>Status</th><th>Date</th><th class="actions">Actions</th></tr>
+		</thead>
+		<tbody>
+			{{ range .Orders }}
+			<tr>
+				<td class="mono"><strong>{{ .OrderNumber }}</strong></td>
+				<td>{{ .CustomerName }}</td>
+				<td>{{ if .WarehouseName }}{{ .WarehouseName }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td class="muted">{{ if .DeliveryDate }}{{ .DeliveryDate.Format "02 Jan" }}{{ else }}—{{ end }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .GrandTotal }}</td>
+				<td>
+					{{ if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+					{{ else if eq .Status "confirmed" }}<span class="badge badge--info">Confirmed</span>
+					{{ else if eq .Status "packed" }}<span class="badge badge--pending">Packed</span>
+					{{ else if eq .Status "dispatched" }}<span class="badge badge--warning">Dispatched</span>
+					{{ else if eq .Status "delivered" }}<span class="badge badge--active">Delivered</span>
+					{{ else if eq .Status "completed" }}<span class="badge badge--active">Completed</span>
+					{{ else if eq .Status "cancelled" }}<span class="badge badge--danger">Cancelled</span>
+					{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06" }}</td>
+				<td class="actions">
+					<a class="link-button" href="/crm/orders/view?id={{ .ID }}">View</a>
+					{{ if or (eq .Status "confirmed") (eq .Status "packed") }}
+					<a class="link-button" href="/crm/delivery/new?order_id={{ .ID }}">Dispatch</a>
+					{{ end }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">📋</p>
+		<p style="font-weight:600">No sales orders yet</p>
+		<a href="/crm/orders/new" class="button button--sm" style="margin-top:8px">Create First Order</a>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

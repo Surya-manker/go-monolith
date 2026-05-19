@@ -1,0 +1,175 @@
+{{ define "title" }}Sales Report{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Sales Analytics</h1>
+		<p class="muted">Revenue, product performance, and payment breakdown.</p>
+	</div>
+	<a class="button button--muted" href="/reports">← Reports</a>
+</section>
+
+{{/* Chart.js must load before any inline chart scripts below */}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{{/* Date filter */}}
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .Filter.From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .Filter.To }}" style="padding:5px 8px">
+		</label>
+		<div style="display:flex;align-items:flex-end;gap:6px">
+			<button class="button" type="submit">Apply</button>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=sales&format=csv&from={{ .Filter.From }}&to={{ .Filter.To }}">↓ Daily CSV</a>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=product-sales&format=csv&from={{ .Filter.From }}&to={{ .Filter.To }}">↓ Product CSV</a>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=sales&format=pdf&from={{ .Filter.From }}&to={{ .Filter.To }}">↓ PDF</a>
+		</div>
+	</form>
+</section>
+
+{{/* Summary */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total Sales</span>
+		<strong>{{ .Summary.TotalSales }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Revenue</span>
+		<strong style="color:var(--brand-600)">Rs. {{ printf "%.2f" .Summary.TotalRevenue }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Tax Collected</span>
+		<strong>Rs. {{ printf "%.2f" .Summary.TotalTax }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Net Revenue</span>
+		<strong>Rs. {{ printf "%.2f" .Summary.NetRevenue }}</strong>
+		<p class="muted" style="margin-top:4px">Avg: Rs. {{ printf "%.2f" .Summary.AvgSaleValue }}</p>
+	</article>
+</section>
+
+{{/* Charts row */}}
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px">
+	<section class="panel" style="margin:0">
+		<h2 style="margin-bottom:8px">Revenue Trend</h2>
+		<canvas id="salesTrend" height="140"></canvas>
+		<script>
+		(function() {
+			var pts = {{ .SalesChartJSON }};
+			if (!pts || pts.length === 0) { document.getElementById('salesTrend').style.display='none'; return; }
+			new Chart(document.getElementById('salesTrend'), {
+				type: 'bar',
+				data: {
+					labels: pts.map(function(p){ return p.label; }),
+					datasets: [{
+						label: 'Revenue (Rs.)',
+						data: pts.map(function(p){ return p.value; }),
+						backgroundColor: 'rgba(37,99,235,.7)'
+					}]
+				},
+				options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } }, responsive: true }
+			});
+		})();
+		</script>
+	</section>
+
+	<section class="panel" style="margin:0">
+		<h2 style="margin-bottom:8px">Payment Methods</h2>
+		{{ if .PaymentRows }}
+		<canvas id="payPie" height="220"></canvas>
+		<script>
+		(function() {
+			var pts = {{ .PayChartJSON }};
+			if (!pts || pts.length === 0) return;
+			new Chart(document.getElementById('payPie'), {
+				type: 'doughnut',
+				data: {
+					labels: pts.map(function(p){ return p.Method + ' (' + p.Percent + '%)'; }),
+					datasets: [{
+						data: pts.map(function(p){ return p.Total; }),
+						backgroundColor: ['#2563eb','#10b981','#f59e0b','#8b5cf6','#ef4444']
+					}]
+				},
+				options: { plugins: { legend: { position: 'bottom' } }, responsive: true }
+			});
+		})();
+		</script>
+		{{ else }}
+		<div class="empty" style="padding:24px;text-align:center">No data</div>
+		{{ end }}
+	</section>
+</div>
+
+{{/* Daily breakdown table */}}
+{{ if .DailyRows }}
+<section class="panel">
+	<h2 style="margin-bottom:12px">Daily Breakdown</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th style="text-align:right">Sales</th>
+				<th style="text-align:right">Revenue</th>
+				<th style="text-align:right">Tax</th>
+				<th style="text-align:right">Discount</th>
+				<th style="text-align:right">Net</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .DailyRows }}
+			<tr>
+				<td>{{ .Date }}</td>
+				<td style="text-align:right">{{ .SaleCount }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .Revenue }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .TaxTotal }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .Discount }}</td>
+				<td style="text-align:right;font-weight:600">Rs. {{ printf "%.2f" .NetRevenue }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}
+
+{{/* Product sales table */}}
+{{ if .ProductRows }}
+<section class="panel">
+	<h2 style="margin-bottom:12px">Product Performance</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Product</th>
+				<th>SKU</th>
+				<th style="text-align:right">Qty Sold</th>
+				<th style="text-align:right">Revenue</th>
+				<th style="text-align:right">Tax</th>
+				<th style="text-align:right">Net Revenue</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range $i, $r := .ProductRows }}
+			<tr>
+				<td class="muted">{{ add (float64 $i) 1.0 | printf "%.0f" }}</td>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right">{{ .TotalQty }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .Revenue }}</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .TaxAmount }}</td>
+				<td style="text-align:right;font-weight:600;color:var(--brand-600)">Rs. {{ printf "%.2f" .NetRevenue }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a,form,script{display:none!important} canvas{max-width:100%} }</style>
+{{ end }}

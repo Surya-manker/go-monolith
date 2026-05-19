@@ -1,0 +1,115 @@
+{{ define "title" }}{{ .Order.PONumber }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Purchase Order</p>
+		<h1>{{ .Order.PONumber }}</h1>
+		<p class="muted">{{ .Order.SupplierName }} · {{ .Order.WarehouseName }}</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		{{ if eq .Order.Status "draft" }}
+		<form method="POST" action="/procurement/orders/submit?id={{ .Order.ID }}" style="display:inline">
+			<button class="button" type="submit">Submit for Approval</button>
+		</form>
+		{{ end }}
+		{{ if eq .Order.Status "pending" }}
+		<form method="POST" action="/procurement/orders/approve?id={{ .Order.ID }}" style="display:inline">
+			<button class="button" type="submit" style="background:#059669">✓ Approve PO</button>
+		</form>
+		{{ end }}
+		{{ if eq .Order.Status "approved" }}
+		<a class="button" href="/procurement/grn/new?po_id={{ .Order.ID }}">Receive Stock (GRN)</a>
+		{{ end }}
+		{{ if and (ne .Order.Status "completed") (ne .Order.Status "cancelled") }}
+		<form method="POST" action="/procurement/orders/cancel?id={{ .Order.ID }}" style="display:inline">
+			<button class="button button--muted" type="submit"
+				onclick="return confirm('Cancel this PO?')">Cancel PO</button>
+		</form>
+		{{ end }}
+		<a class="button button--muted" href="/procurement/orders">← Orders</a>
+	</div>
+</section>
+
+{{/* Status timeline */}}
+<section class="panel" style="padding:12px 20px">
+	<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap">
+		{{ $steps := slice "draft" "pending" "approved" "partially_received" "completed" }}
+		{{ $current := .Order.Status }}
+		{{ $stepLabels := slice "Draft" "Pending" "Approved" "Receiving" "Completed" }}
+		<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+			<span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;
+				background:{{ if eq $current "draft" }}#dbeafe;color:#2563eb{{ else if eq $current "pending" }}#fef3c7;color:#d97706{{ else if eq $current "approved" }}#dbeafe;color:#2563eb{{ else if eq $current "partially_received" }}#fef3c7;color:#d97706{{ else if eq $current "completed" }}#d1fae5;color:#059669{{ else }}#fee2e2;color:#dc2626{{ end }}">
+				{{ $current }}
+			</span>
+			{{ if .Order.ApprovedBy }}
+			<span class="muted" style="font-size:12px">Approved by {{ .Order.ApprovedBy }}</span>
+			{{ end }}
+		</div>
+	</div>
+</section>
+
+{{/* PO Details */}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Order Details</h2>
+	<table>
+		<tr><td class="muted">Supplier</td><td><strong>{{ .Order.SupplierName }}</strong></td></tr>
+		<tr><td class="muted">Warehouse</td><td>{{ .Order.WarehouseName }}</td></tr>
+		<tr><td class="muted">Expected Date</td><td>{{ if .Order.ExpectedDate }}{{ .Order.ExpectedDate.Format "02 Jan 2006" }}{{ else }}—{{ end }}</td></tr>
+		<tr><td class="muted">Created</td><td>{{ .Order.CreatedAt.Format "02 Jan 2006" }}</td></tr>
+		{{ if .Order.Notes }}<tr><td class="muted">Notes</td><td>{{ .Order.Notes }}</td></tr>{{ end }}
+	</table>
+</section>
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Financials</h2>
+	<table>
+		<tr><td class="muted">Subtotal</td><td style="text-align:right">Rs. {{ printf "%.2f" .Order.Subtotal }}</td></tr>
+		<tr><td class="muted">Tax Total</td><td style="text-align:right">Rs. {{ printf "%.2f" .Order.TaxTotal }}</td></tr>
+		<tr style="font-weight:700"><td>Grand Total</td><td style="text-align:right;color:var(--brand-600)">Rs. {{ printf "%.2f" .Order.GrandTotal }}</td></tr>
+	</table>
+</section>
+</div>
+
+{{/* Line items */}}
+<section class="panel">
+	<h2 style="margin-bottom:12px">Order Items</h2>
+	{{ if .Order.Items }}
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th><th>SKU</th>
+				<th style="text-align:right">Ordered</th>
+				<th style="text-align:right">Received</th>
+				<th style="text-align:right">Pending</th>
+				<th style="text-align:right">Unit Price</th>
+				<th style="text-align:right">Tax</th>
+				<th style="text-align:right">Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Order.Items }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td style="text-align:right">{{ .Quantity }}</td>
+				<td style="text-align:right;color:#059669">{{ .ReceivedQty }}</td>
+				<td style="text-align:right">
+					{{ if gt .PendingQty 0 }}
+					<span class="badge badge--warning">{{ .PendingQty }}</span>
+					{{ else }}
+					<span class="badge badge--active">Done</span>
+					{{ end }}
+				</td>
+				<td style="text-align:right">Rs. {{ printf "%.2f" .UnitPrice }}</td>
+				<td style="text-align:right">{{ printf "%.0f" .TaxRate }}%</td>
+				<td style="text-align:right;font-weight:600">Rs. {{ printf "%.2f" .LineTotal }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ end }}
+</section>
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head div:last-child{display:none!important} }</style>
+{{ end }}

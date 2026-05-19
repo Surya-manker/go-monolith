@@ -9,6 +9,7 @@ import (
 
 type User struct {
 	ID            int
+	BusinessID    int // tenant identifier — always set, never zero for real users
 	Name          string
 	Email         string
 	PasswordHash  string
@@ -36,14 +37,17 @@ func NewAuthStore(db *sql.DB) *AuthStore {
 }
 
 func (s *AuthStore) Migrate() error {
-	// Extend existing users table with auth columns; ignore "duplicate column" errors.
+	// Extend existing users table with auth + tenancy columns; ignore "duplicate column" errors.
 	for _, col := range []string{
+		`ALTER TABLE users ADD COLUMN business_id INT NOT NULL DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE users ADD COLUMN email_verified TINYINT NOT NULL DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN last_login DATETIME`,
 	} {
 		_, _ = s.db.Exec(col)
 	}
+	_, _ = s.db.Exec(`CREATE INDEX IF NOT EXISTS idx_users_business ON users(business_id)`)
+	_, _ = s.db.Exec(`CREATE INDEX idx_users_business ON users(business_id)`) // ignore error on re-run
 
 	stmts := []string{
 		`CREATE TABLE IF NOT EXISTS sessions (
@@ -78,9 +82,9 @@ func (s *AuthStore) GetUserByEmail(email string) (*User, error) {
 	var u User
 	var ll sql.NullTime
 	err := s.db.QueryRow(`
-		SELECT id, name, email, password_hash, role, email_verified, last_login, created_at
-		FROM users WHERE email = ?
-	`, email).Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt)
+		SELECT id, business_id, name, email, password_hash, role, email_verified, last_login, created_at
+		FROM users WHERE email = ? AND deleted_at IS NULL
+	`, email).Scan(&u.ID, &u.BusinessID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -94,9 +98,9 @@ func (s *AuthStore) GetUserByID(id int) (*User, error) {
 	var u User
 	var ll sql.NullTime
 	err := s.db.QueryRow(`
-		SELECT id, name, email, password_hash, role, email_verified, last_login, created_at
+		SELECT id, business_id, name, email, password_hash, role, email_verified, last_login, created_at
 		FROM users WHERE id = ?
-	`, id).Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt)
+	`, id).Scan(&u.ID, &u.BusinessID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +110,12 @@ func (s *AuthStore) GetUserByID(id int) (*User, error) {
 	return &u, nil
 }
 
-func (s *AuthStore) CreateUser(name, email, passwordHash, role string) (*User, error) {
+// CreateUser creates a user scoped to the given business.
+// businessID must never be 0 for real users.
+func (s *AuthStore) CreateUser(name, email, passwordHash, role string, businessID int) (*User, error) {
 	res, err := s.db.Exec(
-		`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`,
-		name, email, passwordHash, role,
+		`INSERT INTO users (business_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+		businessID, name, email, passwordHash, role,
 	)
 	if err != nil {
 		return nil, err
@@ -141,9 +147,34 @@ func (s *AuthStore) GetPasswordHash(userID int) (string, error) {
 	return hash, err
 }
 
+// ListUsersByBusiness returns only users belonging to the given business.
+func (s *AuthStore) ListUsersByBusiness(businessID int) ([]User, error) {
+	rows, err := s.db.Query(`
+		SELECT id, business_id, name, email, role, email_verified, last_login, created_at
+		FROM users WHERE deleted_at IS NULL AND business_id = ? ORDER BY created_at DESC
+	`, businessID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var u User
+		var ll sql.NullTime
+		if err := rows.Scan(&u.ID, &u.BusinessID, &u.Name, &u.Email, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		if ll.Valid {
+			u.LastLogin = &ll.Time
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 func (s *AuthStore) ListUsers() ([]User, error) {
 	rows, err := s.db.Query(`
-		SELECT id, name, email, role, email_verified, last_login, created_at
+		SELECT id, business_id, name, email, role, email_verified, last_login, created_at
 		FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC
 	`)
 	if err != nil {
@@ -154,7 +185,7 @@ func (s *AuthStore) ListUsers() ([]User, error) {
 	for rows.Next() {
 		var u User
 		var ll sql.NullTime
-		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.BusinessID, &u.Name, &u.Email, &u.Role, &u.EmailVerified, &ll, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		if ll.Valid {

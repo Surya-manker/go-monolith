@@ -1,0 +1,142 @@
+{{ define "title" }}Stock Transfers{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Stock Transfers</h1>
+		<p class="muted">Move stock between warehouses. Transfers are immediate and fully logged in the audit trail.</p>
+	</div>
+	<a class="button button--muted" href="/warehouses/stock">Warehouse Stock</a>
+</section>
+
+<section class="panel">
+	<h2 style="margin-bottom:14px">New Transfer</h2>
+	{{ if le (len .Warehouses) 1 }}
+	<div class="alert" style="padding:16px;border-radius:8px">
+		<strong>At least 2 warehouses are required to transfer stock.</strong>
+		<a href="/warehouses" class="button button--sm" style="margin-left:12px">Add Warehouse</a>
+	</div>
+	{{ else if not .Products }}
+	<div class="alert" style="padding:16px;border-radius:8px">
+		No products found. <a href="/products">Add products</a> before creating a transfer.
+	</div>
+	{{ else }}
+	<form class="grid-form"
+		id="transfer-form"
+		hx-post="/transfers"
+		hx-target="#transfers-table"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type=submit]"
+		onsubmit="return validateTransfer(this)">
+		<label>
+			<span>From Warehouse *</span>
+			<select name="from_warehouse_id" id="from-wh" required onchange="syncDestOptions()">
+				<option value="">— Select source —</option>
+				{{ range .Warehouses }}
+				<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} (Default){{ end }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>To Warehouse *</span>
+			<select name="to_warehouse_id" id="to-wh" required>
+				<option value="">— Select destination —</option>
+				{{ range .Warehouses }}
+				<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} (Default){{ end }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Product *</span>
+			<select name="product_id" required>
+				<option value="">— Select product —</option>
+				{{ range .Products }}
+				<option value="{{ .ID }}">{{ .Name }}{{ if .SKU }} ({{ .SKU }}){{ end }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Quantity *</span>
+			<input type="number" name="quantity" required min="1"
+				placeholder="Units to transfer">
+		</label>
+		<label class="wide">
+			<span>Note / Reason</span>
+			<input type="text" name="note" maxlength="255"
+				placeholder="Optional reason or reference">
+		</label>
+		<div>
+			<button class="button" type="submit">Transfer Stock</button>
+		</div>
+	</form>
+	<script>
+	function syncDestOptions() {
+		var fromVal = document.getElementById('from-wh').value;
+		var toSel   = document.getElementById('to-wh');
+		Array.from(toSel.options).forEach(function(opt) {
+			opt.disabled = opt.value !== '' && opt.value === fromVal;
+		});
+		if (toSel.value === fromVal) toSel.value = '';
+	}
+	function validateTransfer(form) {
+		var from = form.from_warehouse_id.value;
+		var to   = form.to_warehouse_id.value;
+		if (from && to && from === to) {
+			alert('Source and destination warehouse must be different.');
+			return false;
+		}
+		return true;
+	}
+	</script>
+	{{ end }}
+</section>
+
+<section class="panel">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<div id="transfers-table">
+		{{ template "transfers_table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "transfers_table" }}
+{{ if .Transfers }}
+<table>
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Product</th>
+			<th>From</th>
+			<th>To</th>
+			<th>Qty</th>
+			<th>Note</th>
+			<th>Date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Transfers }}
+		<tr>
+			<td class="mono" style="font-size:12px">#{{ .ID }}</td>
+			<td>
+				<strong>{{ .ProductName }}</strong>
+				<p class="cell-note mono">{{ .SKU }}</p>
+			</td>
+			<td><span class="badge badge--muted">{{ .FromWarehouse }}</span></td>
+			<td><span class="badge badge--success">{{ .ToWarehouse }}</span></td>
+			<td><strong>{{ .Quantity }}</strong></td>
+			<td class="muted">{{ if .Note }}{{ .Note }}{{ else }}—{{ end }}</td>
+			<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06 15:04" }}</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+<p class="muted" style="margin-top:8px;font-size:12px;text-align:right">{{ len .Transfers }} transfer(s)</p>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">↔</p>
+	<p style="font-weight:600;margin-bottom:4px">No transfers yet</p>
+	<p class="muted">Use the form above to move stock between warehouses.</p>
+</div>
+{{ end }}
+{{ end }}

@@ -1,0 +1,108 @@
+{{ define "title" }}Barcodes{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Barcode Management</h1>
+		<p class="muted">View, generate, and print product barcodes. Supports Code128, EAN-13, and QR codes.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<form method="POST" action="/barcodes/auto-generate" style="display:inline">
+			<button class="button button--muted" type="submit"
+				onclick="return confirm('Auto-generate EAN-13 barcodes for all products without one?')">
+				Auto-generate Missing
+			</button>
+		</form>
+		<a class="button" href="/barcodes/labels">Print Labels</a>
+	</div>
+</section>
+
+<section class="panel">
+	<div class="toolbar">
+		<form class="search-form"
+			hx-get="/barcodes"
+			hx-target="#barcodes-table"
+			hx-swap="innerHTML"
+			hx-trigger="input delay:300ms from:input[name=search], submit">
+			<label>
+				<input name="search" type="search" value="{{ .Search }}"
+					placeholder="Search products…" style="min-width:260px">
+			</label>
+			<button class="button" type="submit">Search</button>
+		</form>
+	</div>
+	<div id="barcodes-table">
+		{{ template "barcodes-table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "barcodes-table" }}
+{{ if .Products }}
+<table>
+	<thead>
+		<tr>
+			<th>Product</th>
+			<th>SKU</th>
+			<th>Barcode Value</th>
+			<th>Code128 Preview</th>
+			<th>QR Preview</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Products }}
+		<tr>
+			<td>
+				<strong>{{ .Name }}</strong>
+				{{ if .Brand }}<p class="cell-note">{{ .Brand }}</p>{{ end }}
+			</td>
+			<td class="mono">{{ .SKU }}</td>
+			<td>
+				{{ if .Barcode }}
+					<span class="mono">{{ .Barcode }}</span>
+				{{ else }}
+					<span class="muted">—</span>
+					<form method="POST" action="/barcodes/auto-generate" style="display:inline;margin-left:4px">
+						<input type="hidden" name="product_id" value="{{ .ID }}">
+						<button class="link-button" type="submit" style="font-size:11px">Generate</button>
+					</form>
+				{{ end }}
+			</td>
+			<td>
+				{{ if .Barcode }}
+				<img src="/barcodes/image?id={{ .ID }}&type=code128&w=180&h=48"
+					alt="barcode"
+					style="height:48px;display:block;border:1px solid var(--border);border-radius:4px"
+					loading="lazy">
+				{{ else }}
+				<span class="muted" style="font-size:12px">No barcode</span>
+				{{ end }}
+			</td>
+			<td>
+				{{ if .Barcode }}
+				<img src="/barcodes/image?id={{ .ID }}&type=qr&w=64&h=64"
+					alt="QR"
+					style="width:64px;height:64px;display:block;border:1px solid var(--border);border-radius:4px"
+					loading="lazy">
+				{{ else }}
+				<span class="muted" style="font-size:12px">—</span>
+				{{ end }}
+			</td>
+			<td class="actions">
+				<a class="link-button" href="/barcodes/image?id={{ .ID }}&type=code128&w=300&h=100" target="_blank">PNG</a>
+				<a class="link-button" href="/barcodes/labels?ids={{ .ID }}" target="_blank">Label</a>
+			</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">🏷️</p>
+	<p style="font-weight:600">No products found</p>
+	<p class="muted"><a href="/products">Add products</a> first to manage barcodes.</p>
+</div>
+{{ end }}
+{{ end }}

@@ -1,0 +1,128 @@
+{{ define "title" }}CRM Customers{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>Customers</h1>
+		<p class="muted">Manage customer profiles, credit limits, and outstanding balances.</p>
+	</div>
+	<a class="button button--muted" href="/crm">← CRM</a>
+</section>
+
+<section class="panel">
+	<h2 style="margin-bottom:14px">Add Customer</h2>
+	<form class="grid-form" hx-post="/crm/customers" hx-target="#crm-cust-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+		<label><span>Name *</span><input type="text" name="name" required maxlength="255" placeholder="Customer company/person name"></label>
+		<label><span>Customer Code</span><input type="text" name="customer_code" placeholder="Auto if empty"></label>
+		<label><span>GSTIN</span><input type="text" name="gstin" maxlength="20"></label>
+		<label><span>PAN</span><input type="text" name="pan" maxlength="20"></label>
+		<label><span>Contact Person</span><input type="text" name="contact_person"></label>
+		<label><span>Phone</span><input type="tel" name="phone"></label>
+		<label><span>Email</span><input type="email" name="email"></label>
+		<label><span>Customer Group</span><input type="text" name="customer_group" placeholder="e.g. Retail, Wholesale, VIP"></label>
+		<label><span>Credit Limit (Rs.)</span><input type="number" name="credit_limit" step="0.01" min="0" value="0"></label>
+		<label><span>Payment Terms (days)</span><input type="number" name="payment_terms" value="30" min="0"></label>
+		<label class="wide"><span>Billing Address</span><input type="text" name="billing_address"></label>
+		<label class="wide"><span>Shipping Address</span><input type="text" name="shipping_address" placeholder="Leave blank to use billing address"></label>
+		<label class="wide"><span>Notes</span><input type="text" name="notes"></label>
+		<div><button class="button" type="submit">Add Customer</button></div>
+	</form>
+</section>
+
+<section class="panel">
+	<div id="crm-cust-table">
+		{{ template "crm-customers-table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "crm-customers-table" }}
+{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+
+{{ if .Edit }}
+<div style="margin-bottom:16px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border)">
+	<p style="font-weight:600;margin-bottom:12px">Edit: {{ .Edit.Name }}</p>
+	<form class="grid-form" hx-post="/crm/customers/update?id={{ .Edit.ID }}" hx-target="#crm-cust-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+		<label><span>Name *</span><input type="text" name="name" required value="{{ .Edit.Name }}"></label>
+		<label><span>GSTIN</span><input type="text" name="gstin" value="{{ .Edit.GSTIN }}"></label>
+		<label><span>PAN</span><input type="text" name="pan" value="{{ .Edit.PAN }}"></label>
+		<label><span>Contact Person</span><input type="text" name="contact_person" value="{{ .Edit.ContactPerson }}"></label>
+		<label><span>Phone</span><input type="tel" name="phone" value="{{ .Edit.Phone }}"></label>
+		<label><span>Email</span><input type="email" name="email" value="{{ .Edit.Email }}"></label>
+		<label><span>Group</span><input type="text" name="customer_group" value="{{ .Edit.CustomerGroup }}"></label>
+		<label><span>Credit Limit</span><input type="number" name="credit_limit" step="0.01" value="{{ printf "%.2f" .Edit.CreditLimit }}"></label>
+		<label><span>Payment Terms</span><input type="number" name="payment_terms" value="{{ .Edit.PaymentTerms }}"></label>
+		<label><span>Status</span>
+			<select name="status">
+				<option value="active" {{ if eq .Edit.Status "active" }}selected{{ end }}>Active</option>
+				<option value="inactive" {{ if eq .Edit.Status "inactive" }}selected{{ end }}>Inactive</option>
+				<option value="blocked" {{ if eq .Edit.Status "blocked" }}selected{{ end }}>Blocked</option>
+			</select>
+		</label>
+		<label class="wide"><span>Billing Address</span><input type="text" name="billing_address" value="{{ .Edit.BillingAddress }}"></label>
+		<label class="wide"><span>Shipping Address</span><input type="text" name="shipping_address" value="{{ .Edit.ShippingAddress }}"></label>
+		<label class="wide"><span>Notes</span><input type="text" name="notes" value="{{ .Edit.Notes }}"></label>
+		<div style="display:flex;gap:8px">
+			<button class="button" type="submit">Update</button>
+			<button class="button button--muted" type="button" hx-get="/crm/customers" hx-target="#crm-cust-table" hx-swap="innerHTML">Cancel</button>
+		</div>
+	</form>
+</div>
+{{ end }}
+
+{{ if .Customers }}
+<table>
+	<thead>
+		<tr>
+			<th>Customer</th>
+			<th>Code</th>
+			<th>GSTIN</th>
+			<th>Group</th>
+			<th>Terms</th>
+			<th style="text-align:right">Revenue</th>
+			<th style="text-align:right">Outstanding</th>
+			<th>Status</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Customers }}
+		<tr>
+			<td>
+				<strong>{{ .Name }}</strong>
+				{{ if .ContactPerson }}<p class="cell-note">{{ .ContactPerson }}</p>{{ end }}
+			</td>
+			<td class="mono">{{ .CustomerCode }}</td>
+			<td class="mono">{{ if .GSTIN }}{{ .GSTIN }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td>{{ if .CustomerGroup }}{{ .CustomerGroup }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td>{{ .PaymentTerms }}d</td>
+			<td style="text-align:right">Rs. {{ printf "%.0f" .TotalRevenue }}</td>
+			<td style="text-align:right">
+				{{ if gt .OutstandingDue 0.0 }}
+				<span style="color:#dc2626;font-weight:700">Rs. {{ printf "%.0f" .OutstandingDue }}</span>
+				{{ else }}
+				<span style="color:#059669">Clear</span>
+				{{ end }}
+			</td>
+			<td>
+				{{ if eq .Status "active" }}<span class="badge badge--active">Active</span>
+				{{ else if eq .Status "blocked" }}<span class="badge badge--danger">Blocked</span>
+				{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+			</td>
+			<td class="actions">
+				<a class="link-button" href="/crm/customers/view?id={{ .ID }}">View</a>
+				<button class="link-button" hx-get="/crm/customers/edit?id={{ .ID }}" hx-target="#crm-cust-table" hx-swap="innerHTML">Edit</button>
+			</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">👥</p>
+	<p style="font-weight:600">No customers yet</p>
+	<p class="muted">Add your first customer using the form above.</p>
+</div>
+{{ end }}
+{{ end }}

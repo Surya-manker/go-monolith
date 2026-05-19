@@ -1,0 +1,170 @@
+{{ define "title" }}Expenses{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>Expenses</h1>
+		<p class="muted">Record and categorize all business expenses. Approved expenses are included in P&amp;L.</p>
+	</div>
+	<a class="button button--muted" href="/finance">← Finance</a>
+</section>
+
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total (Approved)</span>
+		<strong style="color:#dc2626">Rs. {{ printf "%.2f" .TotalAmount }}</strong>
+	</article>
+	{{ if gt .PendingCount 0 }}
+	<article class="metric-card" style="border-color:#d97706">
+		<span class="metric-label" style="color:#d97706">Pending Approval</span>
+		<strong style="color:#d97706">{{ .PendingCount }}</strong>
+	</article>
+	{{ end }}
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+
+{{/* Expense list */}}
+<div>
+	<section class="panel" style="padding:12px 16px;margin-bottom:0">
+		<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+			<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+				<span>From</span><input type="date" name="from" value="{{ .From }}" style="padding:5px 8px">
+			</label>
+			<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+				<span>To</span><input type="date" name="to" value="{{ .To }}" style="padding:5px 8px">
+			</label>
+			<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+				<span>Category</span>
+				<select name="category_id" style="padding:5px 8px">
+					<option value="0">All Categories</option>
+					{{ range .Categories }}
+					<option value="{{ .ID }}" {{ if eq $.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<div style="display:flex;align-items:flex-end;gap:6px">
+				<button class="button" type="submit">Filter</button>
+				<a class="button button--muted" target="_blank" href="/finance/export?type=expenses&from={{ .From }}&to={{ .To }}">↓ CSV</a>
+			</div>
+		</form>
+	</section>
+
+	<section class="panel">
+		{{ if .Expenses }}
+		<table>
+			<thead>
+				<tr><th>Date</th><th>Category</th><th>Description</th><th>Method</th><th style="text-align:right">Amount</th><th>Status</th><th class="actions"></th></tr>
+			</thead>
+			<tbody>
+				{{ range .Expenses }}
+				<tr>
+					<td class="muted" style="font-size:12px">{{ .ExpenseDate.Format "02 Jan 2006" }}</td>
+					<td>{{ .CategoryName }}</td>
+					<td>{{ if .Description }}{{ .Description }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+					<td><span class="badge badge--draft">{{ .PaymentMethod }}</span></td>
+					<td style="text-align:right;font-weight:600;color:#dc2626">Rs. {{ printf "%.2f" .Amount }}</td>
+					<td>
+						{{ if eq .Status "approved" }}<span class="badge badge--active">Approved</span>
+						{{ else if eq .Status "pending" }}<span class="badge badge--warning">Pending</span>
+						{{ else }}<span class="badge badge--danger">Rejected</span>{{ end }}
+					</td>
+					<td class="actions">
+						{{ if eq .Status "pending" }}
+						<form method="POST" action="/finance/expenses/approve?id={{ .ID }}" style="display:inline">
+							<button class="link-button" type="submit">Approve</button>
+						</form>
+						<form method="POST" action="/finance/expenses/reject?id={{ .ID }}" style="display:inline">
+							<button class="link-button danger" type="submit">Reject</button>
+						</form>
+						{{ end }}
+					</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+		{{ else }}
+		<div class="empty" style="padding:24px;text-align:center">No expenses in selected period.</div>
+		{{ end }}
+	</section>
+</div>
+
+{{/* Add expense form */}}
+<div>
+	<section class="panel" style="position:sticky;top:16px">
+		<h2 style="margin-bottom:14px">Add Expense</h2>
+		<form method="POST" action="/finance/expenses" style="display:flex;flex-direction:column;gap:10px">
+			<label class="pos-label">
+				<span>Category *</span>
+				<select name="category_id" required>
+					<option value="0">— Select category —</option>
+					{{ range .Categories }}
+					<option value="{{ .ID }}">{{ .Name }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label class="pos-label">
+				<span>Amount (Rs.) *</span>
+				<input type="number" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+			</label>
+			<label class="pos-label">
+				<span>Payment Method</span>
+				<select name="payment_method">
+					<option value="cash">💵 Cash</option>
+					<option value="bank">🏦 Bank Transfer</option>
+					<option value="upi">📱 UPI</option>
+					<option value="card">💳 Card</option>
+					<option value="cheque">📋 Cheque</option>
+				</select>
+			</label>
+			{{ if .BankAccounts }}
+			<label class="pos-label">
+				<span>Bank Account</span>
+				<select name="bank_account_id">
+					<option value="0">— N/A —</option>
+					{{ range .BankAccounts }}
+					<option value="{{ .ID }}">{{ .AccountName }}</option>
+					{{ end }}
+				</select>
+			</label>
+			{{ end }}
+			<label class="pos-label">
+				<span>Expense Date *</span>
+				<input type="date" name="expense_date" required value="{{ today }}">
+			</label>
+			<label class="pos-label">
+				<span>Description</span>
+				<input type="text" name="description" placeholder="Brief description">
+			</label>
+			<label class="pos-label">
+				<span>Reference</span>
+				<input type="text" name="reference" placeholder="Bill no., receipt no.">
+			</label>
+			<label class="pos-label">
+				<span>Status</span>
+				<select name="status">
+					<option value="approved">Approved</option>
+					<option value="pending">Pending Approval</option>
+				</select>
+			</label>
+			<button class="button" type="submit">Add Expense</button>
+		</form>
+
+		<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">
+
+		<h3 style="font-size:13px;margin-bottom:8px;font-weight:600">Add Category</h3>
+		<form method="POST" action="/finance/categories" style="display:flex;gap:6px">
+			<input type="text" name="name" placeholder="New category name" style="flex:1;padding:6px 8px;font-size:13px">
+			<button class="button button--sm" type="submit">Add</button>
+		</form>
+	</section>
+</div>
+
+</div>
+
+<style>
+.pos-label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--text-muted); }
+.pos-label select, .pos-label input { padding:6px 8px; font-size:13px; }
+</style>
+{{ end }}

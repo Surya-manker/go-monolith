@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// DashboardSSE streams live metric updates to the dashboard every 30 seconds.
-// HTMX SSE extension listens for the "dashboard" event and swaps the metric values.
 func (a *App) DashboardSSE(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -20,12 +18,14 @@ func (a *App) DashboardSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
 
+	bizID := a.bizID(r)
+
 	send := func() {
-		productCount, _ := a.ProductService.Count()
-		lowStock, _ := a.ProductService.LowStockCount()
-		counts, _ := a.ModuleService.Counts()
-		totals, _ := a.ModuleService.Totals()
-		pending, _ := a.ModuleService.PendingInvoicesTotal()
+		productCount, _ := a.ProductService.Count(bizID)
+		lowStock, _ := a.ProductService.LowStockCount(bizID)
+		counts, _ := a.moduleService(r).Counts(bizID)
+		totals, _ := a.moduleService(r).Totals(bizID)
+		pending, _ := a.moduleService(r).PendingInvoicesTotal(bizID)
 
 		data := fmt.Sprintf(
 			`<span id="sse-products">%d</span>`+
@@ -38,14 +38,11 @@ func (a *App) DashboardSSE(w http.ResponseWriter, r *http.Request) {
 			counts["customers"], counts["invoices"],
 			totals["invoice_total"], pending,
 		)
-
 		fmt.Fprintf(w, "event: dashboard\ndata: %s\n\n", data)
 		flusher.Flush()
 	}
 
-	// Send immediately on connect.
 	send()
-
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 

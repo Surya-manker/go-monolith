@@ -2,7 +2,7 @@
 
 {{ define "content" }}
 <h2 class="auth-heading">Create your account</h2>
-<p class="auth-sub">Get started with InvoBill today.</p>
+<p class="auth-sub">One account = one business workspace. All your data stays private.</p>
 
 {{ if .Error }}
 <div class="alert">{{ .Error }}</div>
@@ -10,8 +10,12 @@
 
 <form method="POST" action="/register" class="auth-form">
 	<label>
-		<span>Full name</span>
-		<input type="text" name="name" required autofocus placeholder="Jane Doe">
+		<span>Business / Company name</span>
+		<input type="text" name="business_name" required autofocus placeholder="e.g. Sharma Traders">
+	</label>
+	<label>
+		<span>Your full name</span>
+		<input type="text" name="name" required placeholder="Jane Doe">
 	</label>
 	<label>
 		<span>Email address</span>
@@ -21,7 +25,7 @@
 		<span>Password <small class="muted">(min. 8 characters)</small></span>
 		<input type="password" name="password" required minlength="8" placeholder="••••••••">
 	</label>
-	<button class="button button--full" type="submit">Create account</button>
+	<button class="button button--full" type="submit">Create Business Account</button>
 </form>
 
 <p class="auth-footer">

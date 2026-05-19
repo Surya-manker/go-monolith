@@ -11,7 +11,6 @@ import (
 	"go-monolith/services"
 )
 
-// Pagination holds display state for paginated tables.
 type Pagination struct {
 	Page     int
 	PerPage  int
@@ -36,8 +35,6 @@ type CrudPageData struct {
 	Pagination Pagination
 }
 
-// setToast sets the HX-Trigger header so the client shows a toast notification.
-// Must be called before any write to w.
 func setToast(w http.ResponseWriter, message, typ string) {
 	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"showToast":{"message":%q,"type":%q}}`, message, typ))
 }
@@ -49,7 +46,7 @@ func (a *App) moduleTitle(key string) string {
 	return "Record"
 }
 
-// ── Module CRUD handlers ─────────────────────────────────────────────────────
+// ── Module CRUD handlers ──────────────────────────────────────────────────────
 
 func (a *App) ModuleIndex(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +60,8 @@ func (a *App) ModuleIndex(key string) http.HandlerFunc {
 		sort := q.Get("sort")
 		dir := q.Get("dir")
 
-		config, result, err := a.ModuleService.ListPaged(key, page, perPage, search, sort, dir)
+		bizID := a.bizID(r)
+		config, result, err := a.moduleService(r).ListPaged(key, page, perPage, search, sort, dir, bizID)
 		if err != nil {
 			http.Error(w, "could not load module", http.StatusInternalServerError)
 			return
@@ -77,7 +75,6 @@ func (a *App) ModuleIndex(key string) http.HandlerFunc {
 				LastPage: result.LastPage, Search: search, Sort: sort, Dir: dir,
 			},
 		}
-		// HTMX search/sort requests only need the table fragment.
 		if r.Header.Get("HX-Request") == "true" {
 			a.Renderer.Partial(w, "crud_table.html", data)
 			return
@@ -88,8 +85,9 @@ func (a *App) ModuleIndex(key string) http.HandlerFunc {
 
 func (a *App) ModuleCreate(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		values := valuesFromRequest(r)
-		err := a.ModuleService.Create(key, values)
+		err := a.moduleService(r).Create(key, values, bizID)
 		if err == nil {
 			a.auditLog(r, key, "create", "", values)
 			setToast(w, a.moduleTitle(key)+" created successfully", "success")
@@ -105,7 +103,7 @@ func (a *App) ModuleEdit(key string) http.HandlerFunc {
 			http.Error(w, "invalid id", http.StatusBadRequest)
 			return
 		}
-		config, record, err := a.ModuleService.Get(key, id)
+		config, record, err := a.moduleService(r).Get(key, id, a.bizID(r))
 		if err != nil {
 			http.Error(w, "record not found", http.StatusNotFound)
 			return
@@ -117,11 +115,12 @@ func (a *App) ModuleEdit(key string) http.HandlerFunc {
 
 func (a *App) ModuleUpdate(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		id, err := idFromRequest(r)
 		values := valuesFromRequest(r)
 		if err == nil {
-			_, before, _ := a.ModuleService.Get(key, id)
-			err = a.ModuleService.Update(key, id, values)
+			_, before, _ := a.moduleService(r).Get(key, id, bizID)
+			err = a.moduleService(r).Update(key, id, values, bizID)
 			if err == nil {
 				a.auditLogChange(r, key, "update", strconv.Itoa(id), models.Record(before), models.Record(values))
 				setToast(w, a.moduleTitle(key)+" updated successfully", "success")
@@ -133,9 +132,10 @@ func (a *App) ModuleUpdate(key string) http.HandlerFunc {
 
 func (a *App) ModuleDelete(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		id, err := idFromRequest(r)
 		if err == nil {
-			err = a.ModuleService.Delete(key, id)
+			err = a.moduleService(r).Delete(key, id, bizID)
 			if err == nil {
 				a.auditLog(r, key, "delete", strconv.Itoa(id), nil)
 				setToast(w, a.moduleTitle(key)+" moved to trash", "warning")
@@ -145,11 +145,11 @@ func (a *App) ModuleDelete(key string) http.HandlerFunc {
 	}
 }
 
-// ── Trash / restore handlers ─────────────────────────────────────────────────
+// ── Trash / restore ───────────────────────────────────────────────────────────
 
 func (a *App) ModuleTrash(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		config, records, err := a.ModuleService.Trash(key)
+		config, records, err := a.moduleService(r).Trash(key, a.bizID(r))
 		if err != nil {
 			http.Error(w, "could not load trash", http.StatusInternalServerError)
 			return
@@ -160,38 +160,40 @@ func (a *App) ModuleTrash(key string) http.HandlerFunc {
 
 func (a *App) ModuleRestore(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		id, err := idFromRequest(r)
 		if err == nil {
-			err = a.ModuleService.Restore(key, id)
+			err = a.moduleService(r).Restore(key, id, bizID)
 			if err == nil {
 				a.auditLog(r, key, "restore", strconv.Itoa(id), nil)
 				setToast(w, a.moduleTitle(key)+" restored", "success")
 			}
 		}
-		config, records, _ := a.ModuleService.Trash(key)
+		config, records, _ := a.moduleService(r).Trash(key, bizID)
 		a.Renderer.Partial(w, "trash_table.html", CrudPageData{Config: config, Records: records})
 	}
 }
 
 func (a *App) ModulePurge(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		id, err := idFromRequest(r)
 		if err == nil {
-			err = a.ModuleService.HardDelete(key, id)
+			err = a.moduleService(r).HardDelete(key, id, bizID)
 			if err == nil {
 				a.auditLog(r, key, "purge", strconv.Itoa(id), nil)
 				setToast(w, a.moduleTitle(key)+" permanently deleted", "error")
 			}
 		}
-		config, records, _ := a.ModuleService.Trash(key)
+		config, records, _ := a.moduleService(r).Trash(key, bizID)
 		a.Renderer.Partial(w, "trash_table.html", CrudPageData{Config: config, Records: records})
 	}
 }
 
-// ── Readonly pages ───────────────────────────────────────────────────────────
+// ── Readonly pages ────────────────────────────────────────────────────────────
 
 func (a *App) StockLogs(w http.ResponseWriter, r *http.Request) {
-	records, err := a.ModuleService.StockLogs()
+	records, err := a.moduleService(r).StockLogs(a.bizID(r))
 	if err != nil {
 		http.Error(w, "could not load stock logs", http.StatusInternalServerError)
 		return
@@ -217,7 +219,7 @@ func (a *App) AuditLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	config := services.ModuleConfig{
 		Title: "Audit Log", Path: "/audit-logs",
-		Description: "Complete history of all data changes across all modules.",
+		Description: "Complete history of all data changes.",
 		Columns: []services.Field{
 			{Name: "user_name", Label: "User"}, {Name: "module", Label: "Module"},
 			{Name: "action", Label: "Action"}, {Name: "record_id", Label: "Record"},
@@ -229,24 +231,11 @@ func (a *App) AuditLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) Reports(w http.ResponseWriter, r *http.Request) {
-	counts, err := a.ModuleService.Counts()
-	if err != nil {
-		http.Error(w, "could not load reports", http.StatusInternalServerError)
-		return
-	}
-	totals, err := a.ModuleService.Totals()
-	if err != nil {
-		http.Error(w, "could not load reports", http.StatusInternalServerError)
-		return
-	}
-	a.Renderer.Page(w, "reports.html", map[string]any{
-		"User":   middleware.UserFromContext(r.Context()),
-		"Counts": counts,
-		"Totals": totals,
-	})
+	// Kept for backward compatibility — new hub is at /reports via ReportsHub.
+	http.Redirect(w, r, "/reports", http.StatusFound)
 }
 
-// ── Internal helpers ─────────────────────────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────────────────
 
 func (a *App) renderModuleTable(w http.ResponseWriter, r *http.Request, key string, err error) {
 	q := r.URL.Query()
@@ -255,7 +244,7 @@ func (a *App) renderModuleTable(w http.ResponseWriter, r *http.Request, key stri
 	sort := q.Get("sort")
 	dir := q.Get("dir")
 
-	config, result, listErr := a.ModuleService.ListPaged(key, page, 25, search, sort, dir)
+	config, result, listErr := a.moduleService(r).ListPaged(key, page, 25, search, sort, dir, a.bizID(r))
 	if listErr != nil {
 		http.Error(w, "could not load module", http.StatusInternalServerError)
 		return
@@ -307,7 +296,9 @@ func valuesFromRequest(r *http.Request) map[string]string {
 	_ = r.ParseForm()
 	values := map[string]string{}
 	for key, value := range r.Form {
-		values[key] = strings.TrimSpace(value[0])
+		if len(value) > 0 {
+			values[key] = strings.TrimSpace(value[0])
+		}
 	}
 	return values
 }
@@ -324,3 +315,4 @@ func fieldsWithValues(fields []services.Field, record models.Record) []services.
 	}
 	return out
 }
+

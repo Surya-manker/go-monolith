@@ -1,0 +1,103 @@
+{{ define "title" }}New Sales Return{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Returns</p>
+		<h1>New Sales Return</h1>
+		<p class="muted">Process a customer return. Resalable stock goes back to warehouse; damaged/expired stock is flagged.</p>
+	</div>
+	<a class="button button--muted" href="/returns">← Back</a>
+</section>
+
+<section class="panel" style="max-width:900px">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<form method="POST" action="/returns/sales" id="return-form">
+		{{/* Header */}}
+		<div class="grid-form" style="margin-bottom:16px">
+			<label>
+				<span>Warehouse *</span>
+				<select name="warehouse_id" required>
+					<option value="">— Select warehouse —</option>
+					{{ range .Warehouses }}
+					<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} ★{{ end }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Original Sale ID</span>
+				<input type="number" name="original_sale_id" placeholder="POS sale ID (optional)">
+			</label>
+			<label>
+				<span>Customer Name</span>
+				<input type="text" name="customer_name" placeholder="Customer or walk-in">
+			</label>
+			<label>
+				<span>Phone</span>
+				<input type="text" name="customer_phone" placeholder="+91…">
+			</label>
+			<label class="wide">
+				<span>Return Reason</span>
+				<input type="text" name="return_reason" placeholder="Defective, wrong item, expired, etc.">
+			</label>
+		</div>
+
+		{{/* Items */}}
+		<h3 style="margin-bottom:10px">Return Items</h3>
+		<div id="return-items">
+			<div class="return-item-row">
+				<select name="product_id[]" required style="flex:2">
+					<option value="">— Product —</option>
+					{{ range .Products }}
+					<option value="{{ .ID }}">{{ .Name }} ({{ .SKU }})</option>
+					{{ end }}
+				</select>
+				<select name="batch_id[]" style="flex:1.5">
+					<option value="">— Batch (opt.) —</option>
+					{{ range .Batches }}
+					{{ if eq .Status "active" }}
+					<option value="{{ .ID }}">{{ .BatchNumber }} ({{ .ProductName }}, {{ .Quantity }}u)</option>
+					{{ end }}
+					{{ end }}
+				</select>
+				<input type="number" name="quantity[]" placeholder="Qty" min="1" required style="flex:.7">
+				<input type="number" name="unit_price[]" placeholder="Price" step="0.01" min="0" required style="flex:1">
+				<select name="condition[]" style="flex:1.2">
+					<option value="resalable">Resalable</option>
+					<option value="damaged">Damaged</option>
+					<option value="expired">Expired</option>
+				</select>
+				<input type="text" name="notes[]" placeholder="Note" style="flex:1.5">
+				<button type="button" class="link-button danger" onclick="removeRow(this)">✕</button>
+			</div>
+		</div>
+
+		<button type="button" class="button button--muted button--sm" style="margin:10px 0" onclick="addItemRow()">
+			+ Add Item
+		</button>
+
+		<div style="margin-top:16px;display:flex;gap:8px">
+			<button class="button" type="submit">Create Return</button>
+			<a class="button button--muted" href="/returns">Cancel</a>
+		</div>
+	</form>
+</section>
+
+<style>
+.return-item-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.return-item-row select, .return-item-row input { padding:6px 8px; font-size:13px; }
+</style>
+<script>
+function addItemRow() {
+	var first = document.querySelector('.return-item-row');
+	var clone = first.cloneNode(true);
+	clone.querySelectorAll('input').forEach(function(i) { i.value = ''; });
+	clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+	document.getElementById('return-items').appendChild(clone);
+}
+function removeRow(btn) {
+	var rows = document.querySelectorAll('.return-item-row');
+	if (rows.length > 1) btn.closest('.return-item-row').remove();
+}
+</script>
+{{ end }}

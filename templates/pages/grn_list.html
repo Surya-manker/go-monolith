@@ -1,0 +1,49 @@
+{{ define "title" }}Goods Receipt Notes{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>Goods Receipt Notes</h1>
+		<p class="muted">All stock received from suppliers. Each GRN updates warehouse stock and batch records.</p>
+	</div>
+	<a class="button" href="/procurement/grn/new">New GRN</a>
+</section>
+
+<section class="panel">
+	{{ if .GRNs }}
+	<table>
+		<thead>
+			<tr>
+				<th>GRN Number</th>
+				<th>Supplier</th>
+				<th>PO Reference</th>
+				<th>Warehouse</th>
+				<th style="text-align:right">Items Received</th>
+				<th>Date</th>
+				<th class="actions">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .GRNs }}
+			<tr>
+				<td class="mono"><strong>{{ .GRNNumber }}</strong></td>
+				<td>{{ if .SupplierName }}{{ .SupplierName }}{{ else }}<span class="muted">Direct</span>{{ end }}</td>
+				<td class="mono">{{ if .PONumber }}{{ .PONumber }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td>{{ .WarehouseName }}</td>
+				<td style="text-align:right"><strong>{{ .TotalReceived }}</strong> units</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</td>
+				<td class="actions"><a class="link-button" href="/procurement/grn/view?id={{ .ID }}">View</a></td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">📦</p>
+		<p style="font-weight:600">No GRNs yet</p>
+		<p class="muted">Receive stock by <a href="/procurement/grn/new">creating a GRN</a>.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

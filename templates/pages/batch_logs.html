@@ -1,0 +1,78 @@
+{{ define "title" }}Batch Movement Logs{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Batches</p>
+		<h1>Batch Movement Logs</h1>
+		<p class="muted">Complete audit trail of all batch stock movements.</p>
+	</div>
+	<a class="button button--muted" href="/batches">← Batches</a>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET">
+		<label>
+			<select name="product_id" onchange="this.form.submit()">
+				<option value="0">All Products</option>
+				{{ range .Products }}
+				<option value="{{ .ID }}" {{ if eq $.ProductID .ID }}selected{{ end }}>
+					{{ .Name }} ({{ .SKU }})
+				</option>
+				{{ end }}
+			</select>
+		</label>
+	</form>
+</section>
+
+<section class="panel">
+	{{ if .Logs }}
+	<table>
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Product</th>
+				<th>Batch #</th>
+				<th>Type</th>
+				<th>Before</th>
+				<th>Change</th>
+				<th>After</th>
+				<th>Note</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Logs }}
+			<tr>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06 15:04" }}</td>
+				<td>{{ .ProductName }}</td>
+				<td class="mono">{{ .BatchNumber }}</td>
+				<td>
+					{{ if eq .ChangeType "purchase_in" }}<span class="badge badge--active">Stock In</span>
+					{{ else if eq .ChangeType "sale_out" }}<span class="badge badge--info">Sale</span>
+					{{ else if eq .ChangeType "return_in" }}<span class="badge badge--active">Return In</span>
+					{{ else if eq .ChangeType "return_out" }}<span class="badge badge--warning">Return Out</span>
+					{{ else if eq .ChangeType "transfer_out" }}<span class="badge badge--draft">Transfer Out</span>
+					{{ else if eq .ChangeType "transfer_in" }}<span class="badge badge--active">Transfer In</span>
+					{{ else }}<span class="badge badge--draft">{{ .ChangeType }}</span>{{ end }}
+				</td>
+				<td>{{ .QtyBefore }}</td>
+				<td>
+					{{ if gt .QtyChange 0 }}
+					<span style="color:#059669;font-weight:700">+{{ .QtyChange }}</span>
+					{{ else }}
+					<span style="color:#dc2626;font-weight:700">{{ .QtyChange }}</span>
+					{{ end }}
+				</td>
+				<td><strong>{{ .QtyAfter }}</strong></td>
+				<td class="muted">{{ if .Note }}{{ .Note }}{{ else }}—{{ end }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p>No batch movement logs yet.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

@@ -1,0 +1,64 @@
+{{ define "title" }}POS Sales History{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">POS</p>
+		<h1>Sales History</h1>
+		<p class="muted">All POS transactions for this business.</p>
+	</div>
+	<a class="button" href="/pos">Open POS Terminal</a>
+</section>
+
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Today's Sales</span>
+		<strong>{{ .TodayCount }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Today's Revenue</span>
+		<strong style="color:var(--brand-600)">Rs. {{ printf "%.2f" .TodayTotal }}</strong>
+	</article>
+</section>
+
+<section class="panel">
+	{{ if .Sales }}
+	<table>
+		<thead>
+			<tr>
+				<th>Sale #</th>
+				<th>Customer</th>
+				<th>Warehouse</th>
+				<th>Items</th>
+				<th>Total</th>
+				<th>Payment</th>
+				<th>Date</th>
+				<th class="actions">Receipt</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Sales }}
+			<tr>
+				<td class="mono" style="font-size:12px">{{ .SaleNumber }}</td>
+				<td>{{ if .CustomerName }}{{ .CustomerName }}{{ else }}<span class="muted">Walk-in</span>{{ end }}</td>
+				<td>{{ if .WarehouseName }}{{ .WarehouseName }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td>{{ .ItemCount }}</td>
+				<td><strong>Rs. {{ printf "%.2f" .GrandTotal }}</strong></td>
+				<td><span class="badge badge--info">{{ .PaymentMethod }}</span></td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 06 15:04" }}</td>
+				<td class="actions">
+					<a class="link-button" href="/pos/receipt?id={{ .ID }}" target="_blank">View</a>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">🧾</p>
+		<p style="font-weight:600">No sales yet</p>
+		<p class="muted"><a href="/pos">Go to POS Terminal</a> to create your first sale.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

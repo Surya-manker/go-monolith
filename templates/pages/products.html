@@ -3,9 +3,12 @@
 {{ define "content" }}
 <section class="page-head">
 	<div>
-		<p class="eyebrow">Catalog</p>
+		<p class="eyebrow">Inventory</p>
 		<h1>Products</h1>
-		<p class="muted">Manage product pricing, stock, tax, and low-stock thresholds.</p>
+		<p class="muted">Manage catalog, pricing, stock levels, and barcodes.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" href="/warehouses/stock">Warehouse Stock</a>
 	</div>
 </section>
 
@@ -25,7 +28,7 @@
 			hx-trigger="input delay:400ms from:input[name=search], submit">
 			<label>
 				<input name="search" type="search" value="{{ .Search }}"
-					placeholder="Search by name or SKU…" style="min-width:240px">
+					placeholder="Search by name, SKU, barcode, brand…" style="min-width:260px">
 			</label>
 			<button class="button" type="submit">Search</button>
 		</form>
@@ -40,31 +43,65 @@
 <form class="grid-form" hx-post="/products" hx-target="#products-table" hx-swap="innerHTML">
 	<label>
 		<span>Name *</span>
-		<input type="text" name="name" required placeholder="USB-C Cable">
+		<input type="text" name="name" required placeholder="e.g. USB-C Cable">
 	</label>
 	<label>
 		<span>SKU *</span>
 		<input type="text" name="sku" required placeholder="PROD-001">
 	</label>
 	<label>
-		<span>Price *</span>
+		<span>Barcode / EAN</span>
+		<input type="text" name="barcode" placeholder="8901234567890">
+	</label>
+	<label>
+		<span>HSN / SAC Code</span>
+		<input type="text" name="hsn_code" placeholder="e.g. 8471">
+	</label>
+	<label>
+		<span>Brand</span>
+		<input type="text" name="brand" placeholder="e.g. Samsung">
+	</label>
+	<label>
+		<span>Unit</span>
+		<select name="unit">
+			<option value="pcs">Pcs (Pieces)</option>
+			<option value="nos">Nos (Numbers)</option>
+			<option value="kg">Kg (Kilograms)</option>
+			<option value="gm">Gm (Grams)</option>
+			<option value="ltr">Ltr (Litres)</option>
+			<option value="ml">Ml (Millilitres)</option>
+			<option value="mtr">Mtr (Metres)</option>
+			<option value="box">Box</option>
+			<option value="dozen">Dozen</option>
+			<option value="crt">Crt (Carton)</option>
+		</select>
+	</label>
+	<label>
+		<span>Price (Rs.) *</span>
 		<input name="price" type="number" step="0.01" min="0.01" required placeholder="0.00">
 	</label>
 	<label>
-		<span>Cost</span>
+		<span>Cost Price</span>
 		<input name="cost_price" type="number" step="0.01" min="0" placeholder="0.00">
-	</label>
-	<label>
-		<span>Initial Stock</span>
-		<input name="stock" type="number" min="0" placeholder="0">
 	</label>
 	<label>
 		<span>Tax %</span>
 		<input name="tax_rate" type="number" step="0.01" min="0" placeholder="0">
 	</label>
 	<label>
+		<span>Initial Stock</span>
+		<input name="stock" type="number" min="0" placeholder="0">
+	</label>
+	<label>
 		<span>Low Stock Alert</span>
 		<input name="low_stock_threshold" type="number" min="1" value="10">
+	</label>
+	<label>
+		<span>Status</span>
+		<select name="status">
+			<option value="active">Active</option>
+			<option value="inactive">Inactive</option>
+		</select>
 	</label>
 	<label class="wide">
 		<span>Description</span>
@@ -79,12 +116,15 @@
 <table>
 	<thead>
 		<tr>
-			<th>Name</th>
-			<th>SKU</th>
+			<th>Product</th>
+			<th>SKU / Barcode</th>
+			<th>Brand / Unit</th>
+			<th>HSN</th>
 			<th>Price</th>
 			<th>Cost</th>
 			<th>Stock</th>
 			<th>Tax</th>
+			<th>Status</th>
 			<th class="actions">Actions</th>
 		</tr>
 	</thead>
@@ -95,17 +135,32 @@
 					<strong>{{ .Name }}</strong>
 					{{ if .Description }}<p class="cell-note">{{ .Description }}</p>{{ end }}
 				</td>
-				<td><span class="mono">{{ .SKU }}</span></td>
+				<td>
+					<span class="mono">{{ .SKU }}</span>
+					{{ if .Barcode }}<p class="cell-note mono">{{ .Barcode }}</p>{{ end }}
+				</td>
+				<td>
+					{{ if .Brand }}<span>{{ .Brand }}</span>{{ end }}
+					<p class="cell-note">{{ .Unit }}</p>
+				</td>
+				<td class="mono">{{ .HSNCode }}</td>
 				<td>{{ .Price }}</td>
 				<td>{{ .CostPrice }}</td>
 				<td>
 					{{ if .IsLowStock }}
-						<span class="badge badge--danger">{{ .Stock }}</span>
+						<span class="badge badge--danger">{{ .Stock }} {{ .Unit }}</span>
 					{{ else }}
-						<span class="badge badge--success">{{ .Stock }}</span>
+						<span class="badge badge--success">{{ .Stock }} {{ .Unit }}</span>
 					{{ end }}
 				</td>
 				<td>{{ .TaxRate }}%</td>
+				<td>
+					{{ if eq .Status "active" }}
+						<span class="badge badge--success">Active</span>
+					{{ else }}
+						<span class="badge badge--muted">Inactive</span>
+					{{ end }}
+				</td>
 				<td class="actions">
 					<button class="link-button"
 						hx-get="/products/stock?id={{ .ID }}"
@@ -120,7 +175,7 @@
 				</td>
 			</tr>
 		{{ else }}
-			<tr><td colspan="7" class="empty">No products found.</td></tr>
+			<tr><td colspan="10" class="empty">No products found.</td></tr>
 		{{ end }}
 	</tbody>
 </table>

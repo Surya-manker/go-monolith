@@ -1,0 +1,31 @@
+{{ define "title" }}Sales Returns{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div><p class="eyebrow">Returns</p><h1>Sales Returns</h1></div>
+	<a class="button" href="/returns/sales/new">New Return</a>
+</section>
+<section class="panel">
+	{{ if .Returns }}
+	<table>
+		<thead><tr><th>Return #</th><th>Customer</th><th>Warehouse</th><th>Reason</th><th>Amount</th><th>Date</th></tr></thead>
+		<tbody>
+			{{ range .Returns }}
+			<tr>
+				<td class="mono" style="font-size:12px">{{ .ReturnNumber }}</td>
+				<td>{{ if .CustomerName }}{{ .CustomerName }}{{ else }}<span class="muted">Walk-in</span>{{ end }}</td>
+				<td>{{ if .WarehouseName }}{{ .WarehouseName }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td class="muted">{{ if .ReturnReason }}{{ .ReturnReason }}{{ else }}—{{ end }}</td>
+				<td>Rs. {{ printf "%.2f" .TotalAmount }}</td>
+				<td class="muted" style="font-size:12px">{{ .CreatedAt.Format "02 Jan 2006 15:04" }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p>No sales returns yet. <a href="/returns/sales/new">Create one</a></p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

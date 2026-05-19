@@ -1,0 +1,90 @@
+{{ define "title" }}GST Summary{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>GST Summary</h1>
+		<p class="muted">Output tax collected from customers vs input tax paid to suppliers. Net = your GST liability.</p>
+	</div>
+	<a class="button button--muted" href="/finance">← Finance</a>
+</section>
+
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>From</span><input type="date" name="from" value="{{ .Filter.From }}" style="padding:5px 8px">
+		</label>
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>To</span><input type="date" name="to" value="{{ .Filter.To }}" style="padding:5px 8px">
+		</label>
+		<div style="display:flex;align-items:flex-end">
+			<button class="button" type="submit">Apply</button>
+		</div>
+	</form>
+</section>
+
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Output GST (Collected)</span>
+		<strong>Rs. {{ printf "%.2f" .Report.OutputGST }}</strong>
+		<p class="muted" style="margin-top:4px">From POS + Sales Orders</p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Input GST (Paid)</span>
+		<strong style="color:#059669">Rs. {{ printf "%.2f" .Report.InputGST }}</strong>
+		<p class="muted" style="margin-top:4px">From Procurement Orders</p>
+	</article>
+	<article class="metric-card" {{ if gt .Report.NetGSTPayable 0.0 }}style="border-color:#dc2626"{{ end }}>
+		<span class="metric-label">Net GST Payable</span>
+		<strong {{ if gt .Report.NetGSTPayable 0.0 }}style="color:#dc2626"{{ else }}style="color:#059669"{{ end }}>
+			Rs. {{ printf "%.2f" .Report.NetGSTPayable }}
+		</strong>
+		<p class="muted" style="margin-top:4px">{{ if gt .Report.NetGSTPayable 0.0 }}Liability to government{{ else }}Input credit available{{ end }}</p>
+	</article>
+</section>
+
+{{ if .Report.ByMonth }}
+<section class="panel">
+	<h2 style="margin-bottom:12px">Monthly GST Breakdown</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Month</th>
+				<th style="text-align:right">Output GST (Rs.)</th>
+				<th style="text-align:right">Input GST (Rs.)</th>
+				<th style="text-align:right">Net Payable (Rs.)</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Report.ByMonth }}
+			<tr>
+				<td><strong>{{ .Month }}</strong></td>
+				<td style="text-align:right">{{ printf "%.2f" .OutputGST }}</td>
+				<td style="text-align:right;color:#059669">{{ printf "%.2f" .InputGST }}</td>
+				<td style="text-align:right;font-weight:700;{{ if lt .Net 0.0 }}color:#059669{{ else }}color:#dc2626{{ end }}">
+					{{ printf "%.2f" .Net }}
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+		<tfoot>
+			<tr style="font-weight:700;background:var(--surface-2)">
+				<td>TOTAL</td>
+				<td style="text-align:right">{{ printf "%.2f" .Report.OutputGST }}</td>
+				<td style="text-align:right;color:#059669">{{ printf "%.2f" .Report.InputGST }}</td>
+				<td style="text-align:right;{{ if gt .Report.NetGSTPayable 0.0 }}color:#dc2626{{ else }}color:#059669{{ end }}">
+					{{ printf "%.2f" .Report.NetGSTPayable }}
+				</td>
+			</tr>
+		</tfoot>
+	</table>
+</section>
+{{ else }}
+<div class="empty" style="padding:48px;text-align:center">
+	<p class="muted">No GST data in the selected period.</p>
+</div>
+{{ end }}
+
+<style>@media print { .sidebar,.mobile-topbar,.page-head a,form{display:none!important} }</style>
+{{ end }}

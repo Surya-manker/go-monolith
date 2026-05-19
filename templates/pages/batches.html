@@ -1,0 +1,155 @@
+{{ define "title" }}Batch Management{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Inventory</p>
+		<h1>Batch Management</h1>
+		<p class="muted">Track stock by batch number, lot, manufacturing date, and expiry. FEFO is used automatically during sales.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button button--muted" href="/batches/expiry">Expiry Report</a>
+		<a class="button button--muted" href="/batches/logs">Movement Logs</a>
+	</div>
+</section>
+
+{{/* ── Receive new batch ── */}}
+<section class="panel">
+	<h2 style="margin-bottom:14px">Receive Batch (Stock In)</h2>
+	<form class="grid-form" method="POST" action="/batches/receive">
+		<label>
+			<span>Product *</span>
+			<select name="product_id" required>
+				<option value="">— Select product —</option>
+				{{ range .Products }}
+				<option value="{{ .ID }}">{{ .Name }} ({{ .SKU }})</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Warehouse *</span>
+			<select name="warehouse_id" required>
+				<option value="">— Select warehouse —</option>
+				{{ range .Warehouses }}
+				<option value="{{ .ID }}" {{ if and (eq $.WarehouseID .ID) (gt $.WarehouseID 0) }}selected{{ end }}>
+					{{ .Name }}{{ if .IsDefault }} ★{{ end }}
+				</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>Batch Number</span>
+			<input type="text" name="batch_number" placeholder="e.g. BATCH-2025-001 (auto if empty)">
+		</label>
+		<label>
+			<span>Lot Number</span>
+			<input type="text" name="lot_number" placeholder="e.g. LOT-A">
+		</label>
+		<label>
+			<span>Qty Received *</span>
+			<input type="number" name="quantity" required min="1" placeholder="e.g. 100">
+		</label>
+		<label>
+			<span>Mfg. Date</span>
+			<input type="date" name="mfg_date">
+		</label>
+		<label>
+			<span>Expiry Date</span>
+			<input type="date" name="expiry_date">
+		</label>
+		<label class="wide">
+			<span>Notes</span>
+			<input type="text" name="notes" placeholder="Supplier, PO ref, quality notes…">
+		</label>
+		<div>
+			<button class="button" type="submit">Receive Batch</button>
+		</div>
+	</form>
+</section>
+
+{{/* ── Filter tabs ── */}}
+<section class="panel" style="padding:12px 16px">
+	<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+		<a class="button {{ if eq .WarehouseID 0 }}button--primary{{ else }}button--muted{{ end }} button--sm"
+			href="/batches">All Warehouses</a>
+		{{ range .Warehouses }}
+		<a class="button {{ if eq $.WarehouseID .ID }}button--primary{{ else }}button--muted{{ end }} button--sm"
+			href="/batches?warehouse_id={{ .ID }}">{{ .Name }}</a>
+		{{ end }}
+	</div>
+</section>
+
+{{/* ── Batch table ── */}}
+<section class="panel">
+	{{ if .Batches }}
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th>
+				<th>Warehouse</th>
+				<th>Batch #</th>
+				<th>Lot #</th>
+				<th>Mfg. Date</th>
+				<th>Expiry Date</th>
+				<th>Qty</th>
+				<th>Status</th>
+				<th class="actions">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Batches }}
+			<tr>
+				<td>
+					<strong>{{ .ProductName }}</strong>
+					<p class="cell-note mono">{{ .SKU }}</p>
+				</td>
+				<td>{{ .WarehouseName }}</td>
+				<td class="mono">{{ .BatchNumber }}</td>
+				<td class="mono">{{ if .LotNumber }}{{ .LotNumber }}{{ else }}—{{ end }}</td>
+				<td class="muted">{{ if .MfgDate }}{{ .MfgDate.Format "02 Jan 2006" }}{{ else }}—{{ end }}</td>
+				<td>
+					{{ if .ExpiryDate }}
+					{{ if eq .ExpiryClass "expired" }}
+					<span class="badge badge--danger">{{ .ExpiryDate.Format "02 Jan 2006" }} (Expired)</span>
+					{{ else if eq .ExpiryClass "danger" }}
+					<span class="badge badge--warning">{{ .ExpiryDate.Format "02 Jan 2006" }} ({{ .ExpiryDays }}d)</span>
+					{{ else if eq .ExpiryClass "warning" }}
+					<span class="badge badge--pending">{{ .ExpiryDate.Format "02 Jan 2006" }} ({{ .ExpiryDays }}d)</span>
+					{{ else }}
+					<span class="badge badge--active">{{ .ExpiryDate.Format "02 Jan 2006" }}</span>
+					{{ end }}
+					{{ else }}
+					<span class="muted">No expiry</span>
+					{{ end }}
+				</td>
+				<td>
+					{{ if gt .Quantity 0 }}
+					<strong>{{ .Quantity }}</strong>
+					{{ else }}
+					<span class="muted">0</span>
+					{{ end }}
+				</td>
+				<td>
+					{{ if eq .Status "active" }}<span class="badge badge--active">Active</span>
+					{{ else if eq .Status "consumed" }}<span class="badge badge--draft">Consumed</span>
+					{{ else if eq .Status "expired" }}<span class="badge badge--danger">Expired</span>
+					{{ else if eq .Status "damaged" }}<span class="badge badge--warning">Damaged</span>
+					{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				</td>
+				<td class="actions">
+					<a class="link-button" href="/batches/edit?id={{ .ID }}">Edit</a>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	<p class="muted" style="margin-top:8px;font-size:12px;text-align:right">{{ len .Batches }} batch(es)</p>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">📦</p>
+		<p style="font-weight:600">No batches yet</p>
+		<p class="muted">Use "Receive Batch" above to add stock with batch tracking.</p>
+	</div>
+	{{ end }}
+</section>
+{{ end }}

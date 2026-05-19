@@ -1,0 +1,140 @@
+{{ define "title" }}CRM Dashboard{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">CRM</p>
+		<h1>Sales & CRM</h1>
+		<p class="muted">Customer relationships, quotations, sales orders, and delivery management.</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button" href="/crm/quotations/new">New Quote</a>
+		<a class="button button--muted" href="/crm/orders/new">New Order</a>
+	</div>
+</section>
+
+{{/* Stats */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Active Customers</span>
+		<strong>{{ .Stats.TotalCustomers }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/crm/customers">Manage →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.PendingQuotes 0 }}style="border-color:#d97706"{{ end }}>
+		<span class="metric-label">Open Quotations</span>
+		<strong {{ if gt .Stats.PendingQuotes 0 }}style="color:#d97706"{{ end }}>{{ .Stats.PendingQuotes }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/crm/quotations">View →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.ActiveOrders 0 }}style="border-color:#2563eb"{{ end }}>
+		<span class="metric-label">Active Orders</span>
+		<strong {{ if gt .Stats.ActiveOrders 0 }}style="color:#2563eb"{{ end }}>{{ .Stats.ActiveOrders }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/crm/orders">View →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.PendingDeliveries 0 }}style="border-color:#d97706"{{ end }}>
+		<span class="metric-label">Pending Deliveries</span>
+		<strong {{ if gt .Stats.PendingDeliveries 0 }}style="color:#d97706"{{ end }}>{{ .Stats.PendingDeliveries }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/crm/delivery">View →</a></p>
+	</article>
+	<article class="metric-card" {{ if gt .Stats.TotalOutstanding 0.0 }}style="border-color:#dc2626"{{ end }}>
+		<span class="metric-label">Outstanding Dues</span>
+		<strong {{ if gt .Stats.TotalOutstanding 0.0 }}style="color:#dc2626"{{ end }}>Rs. {{ printf "%.2f" .Stats.TotalOutstanding }}</strong>
+		<p class="muted" style="margin-top:4px"><a href="/crm/payments">Collect →</a></p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Month Revenue</span>
+		<strong style="color:var(--brand-600)">Rs. {{ printf "%.2f" .Stats.MonthRevenue }}</strong>
+	</article>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>Recent Orders</h2>
+		<a class="text-link" href="/crm/orders">All →</a>
+	</div>
+	{{ if .RecentOrders }}
+	<div class="stack">
+		{{ range .RecentOrders }}
+		<div class="stock-row">
+			<div>
+				<strong class="mono">{{ .OrderNumber }}</strong>
+				<span>{{ .CustomerName }}</span>
+			</div>
+			<div style="text-align:right">
+				{{ if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+				{{ else if eq .Status "confirmed" }}<span class="badge badge--info">Confirmed</span>
+				{{ else if eq .Status "packed" }}<span class="badge badge--pending">Packed</span>
+				{{ else if eq .Status "dispatched" }}<span class="badge badge--warning">Dispatched</span>
+				{{ else if eq .Status "delivered" }}<span class="badge badge--active">Delivered</span>
+				{{ else if eq .Status "completed" }}<span class="badge badge--active">Done</span>
+				{{ else if eq .Status "cancelled" }}<span class="badge badge--danger">Cancelled</span>
+				{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">No orders yet. <a href="/crm/orders/new">Create one</a></div>
+	{{ end }}
+</section>
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>Recent Quotations</h2>
+		<a class="text-link" href="/crm/quotations">All →</a>
+	</div>
+	{{ if .RecentQuotes }}
+	<div class="stack">
+		{{ range .RecentQuotes }}
+		<div class="stock-row">
+			<div>
+				<strong class="mono">{{ .QuoteNumber }}</strong>
+				<span>{{ .CustomerName }}</span>
+			</div>
+			<div style="text-align:right">
+				{{ if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+				{{ else if eq .Status "sent" }}<span class="badge badge--info">Sent</span>
+				{{ else if eq .Status "approved" }}<span class="badge badge--active">Approved</span>
+				{{ else if eq .Status "rejected" }}<span class="badge badge--danger">Rejected</span>
+				{{ else if eq .Status "converted" }}<span class="badge badge--active">Converted</span>
+				{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				<p class="muted" style="font-size:11px">Rs. {{ printf "%.0f" .GrandTotal }}</p>
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">No quotes yet. <a href="/crm/quotations/new">Create one</a></div>
+	{{ end }}
+</section>
+
+<section class="panel" style="margin:0">
+	<div class="section-head">
+		<h2>Top Customers</h2>
+		<a class="text-link" href="/crm/customers">All →</a>
+	</div>
+	{{ if .TopCustomers }}
+	<div class="stack">
+		{{ range .TopCustomers }}
+		<div class="stock-row">
+			<div>
+				<strong>{{ .Name }}</strong>
+				<span class="mono" style="font-size:11px">{{ .CustomerCode }}</span>
+			</div>
+			<div style="text-align:right">
+				<span style="font-weight:700;color:var(--brand-600)">Rs. {{ printf "%.0f" .TotalRevenue }}</span>
+				{{ if gt .OutstandingDue 0.0 }}
+				<p class="muted" style="font-size:11px;color:#dc2626">Due: Rs. {{ printf "%.0f" .OutstandingDue }}</p>
+				{{ end }}
+			</div>
+		</div>
+		{{ end }}
+	</div>
+	{{ else }}
+	<div class="empty">No customers yet. <a href="/crm/customers">Add one</a></div>
+	{{ end }}
+</section>
+
+</div>
+{{ end }}

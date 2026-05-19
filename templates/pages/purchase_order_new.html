@@ -1,0 +1,104 @@
+{{ define "title" }}New Purchase Order{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>New Purchase Order</h1>
+		<p class="muted">Create a PO for a supplier. Once approved, you can receive stock against it.</p>
+	</div>
+	<a class="button button--muted" href="/procurement/orders">← Orders</a>
+</section>
+
+<section class="panel" style="max-width:1000px">
+	{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+	<form method="POST" action="/procurement/orders" id="po-form">
+		<div class="grid-form" style="margin-bottom:16px">
+			<label>
+				<span>Supplier *</span>
+				<select name="supplier_id" required>
+					<option value="">— Select supplier —</option>
+					{{ range .Suppliers }}
+					<option value="{{ .ID }}">{{ .Name }} ({{ .SupplierCode }})</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Destination Warehouse *</span>
+				<select name="warehouse_id" required>
+					<option value="">— Select warehouse —</option>
+					{{ range .Warehouses }}
+					<option value="{{ .ID }}">{{ .Name }}{{ if .IsDefault }} ★{{ end }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label>
+				<span>Expected Delivery Date</span>
+				<input type="date" name="expected_date">
+			</label>
+			<label class="wide">
+				<span>Notes</span>
+				<input type="text" name="notes" placeholder="Delivery instructions, reference, etc.">
+			</label>
+		</div>
+
+		<h3 style="margin-bottom:10px">Order Items</h3>
+		<div id="po-items">
+			<div class="po-item-row">
+				<select name="product_id[]" required style="flex:2.5">
+					<option value="">— Product —</option>
+					{{ range .Products }}
+					<option value="{{ .ID }}" data-price="{{ printf "%.2f" .CostPrice }}">{{ .Name }} ({{ .SKU }})</option>
+					{{ end }}
+				</select>
+				<input type="number" name="quantity[]" placeholder="Qty" min="1" required style="flex:.7">
+				<input type="number" name="unit_price[]" placeholder="Cost Price" step="0.01" min="0" required style="flex:1">
+				<input type="number" name="tax_rate[]" placeholder="Tax %" step="0.01" min="0" value="0" style="flex:.7">
+				<button type="button" class="link-button danger" onclick="removePORow(this)">✕</button>
+			</div>
+		</div>
+		<button type="button" class="button button--muted button--sm" style="margin:8px 0" onclick="addPORow()">+ Add Item</button>
+
+		<div style="margin-top:16px;display:flex;gap:8px">
+			<button class="button" type="submit">Create PO (Draft)</button>
+			<a class="button button--muted" href="/procurement/orders">Cancel</a>
+		</div>
+	</form>
+</section>
+
+<style>
+.po-item-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; }
+.po-item-row select, .po-item-row input { padding:6px 8px; font-size:13px; }
+</style>
+<script>
+var productPrices = {};
+{{ range .Products }}
+productPrices[{{ .ID }}] = {{ printf "%.2f" .CostPrice }};
+{{ end }}
+
+function addPORow() {
+	var first = document.querySelector('#po-items .po-item-row');
+	var clone = first.cloneNode(true);
+	clone.querySelectorAll('input').forEach(function(i) { i.value = i.defaultValue || ''; });
+	clone.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+	document.getElementById('po-items').appendChild(clone);
+	attachPriceListener(clone.querySelector('select[name="product_id[]"]'),
+		clone.querySelector('input[name="unit_price[]"]'));
+}
+function removePORow(btn) {
+	var rows = document.querySelectorAll('.po-item-row');
+	if (rows.length > 1) btn.closest('.po-item-row').remove();
+}
+function attachPriceListener(sel, priceInput) {
+	if (!sel || !priceInput) return;
+	sel.addEventListener('change', function() {
+		var price = productPrices[sel.value];
+		if (price > 0) priceInput.value = price.toFixed(2);
+	});
+}
+document.querySelectorAll('.po-item-row').forEach(function(row) {
+	attachPriceListener(row.querySelector('select[name="product_id[]"]'),
+		row.querySelector('input[name="unit_price[]"]'));
+});
+</script>
+{{ end }}

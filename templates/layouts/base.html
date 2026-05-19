@@ -1,4 +1,4 @@
-{{ define "base" }}
+﻿{{ define "base" }}
 <!doctype html>
 <html lang="en" data-theme="">
 <head>
@@ -9,6 +9,11 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 	<link rel="stylesheet" href="/static/css/app.css">
+	<link rel="manifest" href="/static/manifest.json">
+	<meta name="theme-color" content="#4f46e5" id="theme-color-meta">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-title" content="InvoBill">
 	<script>
 		(function () {
 			var t = localStorage.getItem('theme');
@@ -16,7 +21,7 @@
 		})();
 	</script>
 </head>
-<body>
+<body hx-indicator="#global-loader">
 
 {{ template "header" . }}
 
@@ -28,6 +33,7 @@
 
 {{ template "footer" . }}
 <div id="toast-container" aria-live="polite"></div>
+<div class="htmx-indicator" id="global-loader">Loading…</div>
 <div id="notif-panel" class="notif-panel-wrap" style="display:none"></div>
 
 <!-- Global Search Modal -->
@@ -163,18 +169,63 @@
 	document.addEventListener('DOMContentLoaded', function() { applyBadges(); });
 	document.addEventListener('htmx:afterSwap', function(e) { applyBadges(e.detail.target); });
 
-	// ── Active sidebar link ────────────────────────────────────────
-	document.addEventListener('DOMContentLoaded', function () {
-		var path = location.pathname;
-		document.querySelectorAll('.sidebar-link').forEach(function (a) {
-			var href = a.getAttribute('href');
-			if (!href) return;
-			var active = href === path ||
-				(href !== '/' && href !== '/dashboard' && path.startsWith(href)) ||
-				(href === '/dashboard' && (path === '/' || path === '/dashboard'));
-			if (active) a.classList.add('sidebar-link--active');
+	// ── PWA: service worker + install banner ─────────────────────
+	if ('serviceWorker' in navigator) {
+		window.addEventListener('load', function () {
+			navigator.serviceWorker.register('/static/sw.js').catch(function () {});
 		});
+	}
+	var _pwaPrompt = null;
+	window.addEventListener('beforeinstallprompt', function (e) {
+		e.preventDefault();
+		_pwaPrompt = e;
+		// Only show if not already installed.
+		if (window.matchMedia('(display-mode: standalone)').matches) return;
+		var bar = document.createElement('div');
+		bar.className = 'pwa-install-bar';
+		bar.innerHTML =
+			'<span>Install InvoBill for quick access</span>' +
+			'<button onclick="installPWA()">Install</button>' +
+			'<button class="pwa-dismiss" onclick="this.closest(\'.pwa-install-bar\').remove()" aria-label="Dismiss">✕</button>';
+		document.body.appendChild(bar);
 	});
+	function installPWA() {
+		if (!_pwaPrompt) return;
+		_pwaPrompt.prompt();
+		_pwaPrompt.userChoice.then(function () { _pwaPrompt = null; });
+		var bar = document.querySelector('.pwa-install-bar');
+		if (bar) bar.remove();
+	}
+
+	// ── Sidebar: scroll active link into view ─────────────────────
+	document.addEventListener('DOMContentLoaded', function () {
+		var nav = document.querySelector('.sidebar-nav');
+		if (!nav) return;
+
+		// Active class is set server-side via navActive template function.
+		var activeLink = nav.querySelector('.sidebar-link--active');
+
+		// Persist scroll position across navigations.
+		nav.querySelectorAll('.sidebar-link').forEach(function (a) {
+			a.addEventListener('click', function () {
+				sessionStorage.setItem('sidebarScroll', nav.scrollTop);
+			});
+		});
+		var saved = sessionStorage.getItem('sidebarScroll');
+		if (saved !== null) { nav.scrollTop = parseInt(saved, 10); }
+
+		// Scroll active link into view if it's offscreen.
+		if (activeLink) {
+			requestAnimationFrame(function () {
+				var navH = nav.clientHeight, linkTop = activeLink.offsetTop;
+				var linkH = activeLink.offsetHeight;
+				if (linkTop < nav.scrollTop || (linkTop + linkH) > (nav.scrollTop + navH)) {
+					nav.scrollTop = Math.max(0, linkTop - navH / 2 + linkH / 2);
+				}
+			});
+		}
+	});
+
 </script>
 </body>
 </html>

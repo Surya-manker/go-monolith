@@ -49,17 +49,17 @@ func (a *App) RegisterPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/register?error=invalid+request", http.StatusFound)
 		return
 	}
-	user, err := a.AuthService.Register(
+	// RegisterWithBusiness creates business + owner user atomically.
+	user, err := a.AuthService.RegisterWithBusiness(
+		r.FormValue("business_name"),
 		r.FormValue("name"),
 		r.FormValue("email"),
 		r.FormValue("password"),
-		"staff",
 	)
 	if err != nil {
 		http.Redirect(w, r, "/register?error="+urlEncode(err.Error()), http.StatusFound)
 		return
 	}
-	// Auto-login after registration.
 	sess, err := a.AuthService.Login(user.Email, r.FormValue("password"), clientIP(r), r.UserAgent(), false)
 	if err != nil {
 		http.Redirect(w, r, "/login?success=Account+created.+Please+log+in.", http.StatusFound)
@@ -70,8 +70,14 @@ func (a *App) RegisterPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
+	// Remove from demo map (no-op if not a demo session).
+	if cookie, err := r.Cookie("session"); err == nil {
+		a.DemoSessions.Remove(cookie.Value)
+	}
 	a.AuthService.Logout(r)
 	a.AuthService.ClearCookie(w)
+	// Clear the UI banner cookie.
+	http.SetCookie(w, &http.Cookie{Name: "demo_mode", Value: "", Path: "/", MaxAge: -1})
 	http.Redirect(w, r, "/login?success=You+have+been+logged+out.", http.StatusFound)
 }
 

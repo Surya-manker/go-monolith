@@ -1,0 +1,110 @@
+{{ define "title" }}Stock Valuation Report{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Reports</p>
+		<h1>Stock Valuation</h1>
+		<p class="muted">Total cost and sale value of all active inventory.</p>
+	</div>
+	<a class="button button--muted" href="/reports">← Reports</a>
+</section>
+
+{{/* Filter */}}
+<section class="panel" style="padding:12px 16px">
+	<form class="search-form" method="GET" style="flex-wrap:wrap;gap:8px">
+		<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)">
+			<span>Warehouse</span>
+			<select name="warehouse_id" style="padding:5px 8px">
+				<option value="0">All Warehouses</option>
+				{{ range .Warehouses }}
+				<option value="{{ .ID }}" {{ if eq $.Filter.WarehouseID .ID }}selected{{ end }}>{{ .Name }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<div style="display:flex;align-items:flex-end;gap:6px">
+			<button class="button" type="submit">Apply</button>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=stock-valuation&format=csv&warehouse_id={{ .Filter.WarehouseID }}">↓ CSV</a>
+			<a class="button button--muted" target="_blank"
+				href="/reports/export?type=stock-valuation&format=pdf&warehouse_id={{ .Filter.WarehouseID }}">↓ PDF</a>
+		</div>
+	</form>
+</section>
+
+{{/* Summary cards */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total Products</span>
+		<strong>{{ .Summary.TotalProducts }}</strong>
+		<p class="muted" style="margin-top:4px">{{ .Summary.LowStockCount }} low stock</p>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Total Qty</span>
+		<strong>{{ .Summary.TotalQty }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Cost Value</span>
+		<strong>Rs. {{ printf "%.2f" .Summary.TotalCostValue }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Sale Value</span>
+		<strong style="color:var(--brand-600)">Rs. {{ printf "%.2f" .Summary.TotalSaleValue }}</strong>
+		<p class="muted" style="margin-top:4px">Profit: Rs. {{ printf "%.2f" .Summary.PotentialProfit }}</p>
+	</article>
+</section>
+
+<section class="panel">
+	{{ if .Rows }}
+	<table>
+		<thead>
+			<tr>
+				<th>Product</th>
+				<th>SKU</th>
+				<th>Brand</th>
+				<th>Unit</th>
+				<th style="text-align:right">Qty</th>
+				<th style="text-align:right">Cost Price</th>
+				<th style="text-align:right">Sale Price</th>
+				<th style="text-align:right">Cost Value</th>
+				<th style="text-align:right">Sale Value</th>
+				<th style="text-align:right">Profit Value</th>
+			</tr>
+		</thead>
+		<tbody>
+			{{ range .Rows }}
+			<tr>
+				<td><strong>{{ .ProductName }}</strong></td>
+				<td class="mono">{{ .SKU }}</td>
+				<td>{{ if .Brand }}{{ .Brand }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+				<td>{{ .Unit }}</td>
+				<td style="text-align:right">{{ .TotalQty }}</td>
+				<td style="text-align:right">{{ printf "%.2f" .CostPrice }}</td>
+				<td style="text-align:right">{{ printf "%.2f" .SalePrice }}</td>
+				<td style="text-align:right">{{ printf "%.2f" .CostValue }}</td>
+				<td style="text-align:right;font-weight:600">{{ printf "%.2f" .SaleValue }}</td>
+				<td style="text-align:right;{{ if gt .ProfitValue 0.0 }}color:#059669{{ end }}">{{ printf "%.2f" .ProfitValue }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+		<tfoot>
+			<tr style="font-weight:700;background:var(--surface-2)">
+				<td colspan="7">TOTAL</td>
+				<td style="text-align:right">{{ printf "%.2f" .Summary.TotalCostValue }}</td>
+				<td style="text-align:right">{{ printf "%.2f" .Summary.TotalSaleValue }}</td>
+				<td style="text-align:right;color:#059669">{{ printf "%.2f" .Summary.PotentialProfit }}</td>
+			</tr>
+		</tfoot>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:32px;text-align:center">No products found.</div>
+	{{ end }}
+</section>
+
+<style>
+@media print {
+	.sidebar, .mobile-topbar, .page-head a, form { display:none !important; }
+	body, .main-content { margin:0; }
+}
+</style>
+{{ end }}

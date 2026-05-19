@@ -1,0 +1,110 @@
+{{ define "title" }}Bank Accounts{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Finance</p>
+		<h1>Bank Accounts</h1>
+		<p class="muted">Track bank balances and manually record deposits, withdrawals, and transfers.</p>
+	</div>
+	<a class="button button--muted" href="/finance">← Finance</a>
+</section>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:16px">
+
+{{/* Accounts + transactions */}}
+<div>
+	{{/* Account tiles */}}
+	{{ if .Accounts }}
+	<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+		{{ range .Accounts }}
+		<a href="/finance/bank?account_id={{ .ID }}" class="metric-card"
+			style="text-decoration:none;{{ if eq $.SelectedID .ID }}border-color:var(--brand-400){{ end }}">
+			<span class="metric-label">{{ .AccountName }}</span>
+			<strong style="{{ if lt .CurrentBalance 0.0 }}color:#dc2626{{ end }}">Rs. {{ printf "%.2f" .CurrentBalance }}</strong>
+			<p class="muted" style="margin-top:4px;font-size:11px">{{ .BankName }} · {{ .AccountNumber }}</p>
+		</a>
+		{{ end }}
+	</div>
+
+	{{ if .Transactions }}
+	<section class="panel">
+		<h2 style="margin-bottom:12px">Transactions</h2>
+		<table>
+			<thead><tr><th>Date</th><th>Account</th><th>Description</th><th>Reference</th><th style="text-align:right">Credit</th><th style="text-align:right">Debit</th></tr></thead>
+			<tbody>
+				{{ range .Transactions }}
+				<tr>
+					<td class="muted" style="font-size:12px">{{ .TransactionDate.Format "02 Jan 2006" }}</td>
+					<td>{{ .AccountName }}</td>
+					<td>{{ if .Description }}{{ .Description }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+					<td class="mono" style="font-size:12px">{{ if .Reference }}{{ .Reference }}{{ else }}—{{ end }}</td>
+					<td style="text-align:right;{{ if eq .TransactionType "credit" }}color:#059669;font-weight:600{{ end }}">
+						{{ if eq .TransactionType "credit" }}Rs. {{ printf "%.2f" .Amount }}{{ else }}—{{ end }}
+					</td>
+					<td style="text-align:right;{{ if eq .TransactionType "debit" }}color:#dc2626;font-weight:600{{ end }}">
+						{{ if eq .TransactionType "debit" }}Rs. {{ printf "%.2f" .Amount }}{{ else }}—{{ end }}
+					</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</section>
+	{{ end }}
+
+	{{ else }}
+	<div class="empty" style="padding:48px;text-align:center">
+		<p style="font-size:32px;margin-bottom:8px">🏦</p>
+		<p style="font-weight:600">No bank accounts yet</p>
+		<p class="muted">Add your first bank account using the form.</p>
+	</div>
+	{{ end }}
+</div>
+
+{{/* Add forms */}}
+<div>
+	<section class="panel" style="position:sticky;top:16px">
+		<h2 style="margin-bottom:14px">Add Bank Account</h2>
+		<form method="POST" action="/finance/bank" style="display:flex;flex-direction:column;gap:8px">
+			<label class="pos-label"><span>Account Name *</span><input type="text" name="account_name" required placeholder="e.g. HDFC Current"></label>
+			<label class="pos-label"><span>Bank Name</span><input type="text" name="bank_name" placeholder="e.g. HDFC Bank"></label>
+			<label class="pos-label"><span>Account Number</span><input type="text" name="account_number" placeholder="XXXXXXXXXXXX"></label>
+			<label class="pos-label"><span>IFSC Code</span><input type="text" name="ifsc" placeholder="e.g. HDFC0001234"></label>
+			<label class="pos-label"><span>Opening Balance (Rs.)</span><input type="number" name="opening_balance" step="0.01" value="0"></label>
+			<button class="button" type="submit">Add Account</button>
+		</form>
+
+		{{ if .Accounts }}
+		<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">
+		<h2 style="margin-bottom:14px">Add Transaction</h2>
+		<form method="POST" action="/finance/bank/transaction" style="display:flex;flex-direction:column;gap:8px">
+			<label class="pos-label"><span>Account *</span>
+				<select name="account_id" required>
+					{{ range .Accounts }}
+					<option value="{{ .ID }}" {{ if eq $.SelectedID .ID }}selected{{ end }}>{{ .AccountName }}</option>
+					{{ end }}
+				</select>
+			</label>
+			<label class="pos-label"><span>Type</span>
+				<select name="transaction_type">
+					<option value="credit">Credit (Deposit)</option>
+					<option value="debit">Debit (Withdrawal)</option>
+				</select>
+			</label>
+			<label class="pos-label"><span>Amount (Rs.) *</span><input type="number" name="amount" step="0.01" min="0.01" required></label>
+			<label class="pos-label"><span>Date *</span><input type="date" name="transaction_date" required value="{{ now | dateOnly }}"></label>
+			<label class="pos-label"><span>Reference</span><input type="text" name="reference" placeholder="Cheque no., UTR, etc."></label>
+			<label class="pos-label"><span>Description</span><input type="text" name="description" placeholder="Brief description"></label>
+			<button class="button" type="submit">Add Transaction</button>
+		</form>
+		{{ end }}
+	</section>
+</div>
+
+</div>
+
+<style>
+.pos-label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--text-muted); }
+.pos-label select, .pos-label input { padding:6px 8px; font-size:13px; }
+</style>
+{{ end }}

@@ -17,15 +17,17 @@ func (a *App) InvoicePDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load invoice record.
-	_, inv, err := a.ModuleService.Get("invoices", id)
+	bizID := a.bizID(r)
+
+	// Load invoice record — scoped to this business.
+	_, inv, err := a.moduleService(r).Get("invoices", id, bizID)
 	if err != nil {
 		http.Error(w, "invoice not found", http.StatusNotFound)
 		return
 	}
 
-	// Load matching customer (best-effort; empty fields if not found).
-	customer, _ := a.ModuleService.GetCustomerByName(inv["customer"])
+	// Load matching customer (best-effort).
+	customer, _ := a.moduleService(r).GetCustomerByName(inv["customer"], bizID)
 
 	// Parse grand total.
 	total, _ := strconv.ParseFloat(inv["total"], 64)

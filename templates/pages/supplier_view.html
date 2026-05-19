@@ -1,0 +1,119 @@
+{{ define "title" }}Supplier: {{ .Supplier.Name }}{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Suppliers</p>
+		<h1>{{ .Supplier.Name }}</h1>
+		<p class="muted">{{ .Supplier.SupplierCode }} · {{ .Supplier.Phone }} · {{ .Supplier.Email }}</p>
+	</div>
+	<div style="display:flex;gap:8px">
+		<a class="button" href="/procurement/orders/new">New PO</a>
+		<a class="button button--muted" href="/suppliers">← All Suppliers</a>
+	</div>
+</section>
+
+{{/* Supplier stats */}}
+<section class="metrics">
+	<article class="metric-card">
+		<span class="metric-label">Total Purchases</span>
+		<strong>Rs. {{ printf "%.2f" .Supplier.TotalPurchases }}</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Total Paid</span>
+		<strong style="color:#059669">Rs. {{ printf "%.2f" .Supplier.TotalPaid }}</strong>
+	</article>
+	<article class="metric-card" {{ if gt .Supplier.OutstandingDue 0.0 }}style="border-color:#dc2626"{{ end }}>
+		<span class="metric-label">Outstanding Due</span>
+		<strong {{ if gt .Supplier.OutstandingDue 0.0 }}style="color:#dc2626"{{ end }}>
+			Rs. {{ printf "%.2f" .Supplier.OutstandingDue }}
+		</strong>
+	</article>
+	<article class="metric-card">
+		<span class="metric-label">Payment Terms</span>
+		<strong>{{ .Supplier.PaymentTerms }} days</strong>
+		{{ if gt .Supplier.CreditLimit 0.0 }}<p class="muted" style="margin-top:4px">Credit: Rs. {{ printf "%.0f" .Supplier.CreditLimit }}</p>{{ end }}
+	</article>
+</section>
+
+{{/* Supplier details */}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Details</h2>
+	<table>
+		<tr><td class="muted">GSTIN</td><td class="mono">{{ if .Supplier.GSTIN }}{{ .Supplier.GSTIN }}{{ else }}—{{ end }}</td></tr>
+		<tr><td class="muted">PAN</td><td class="mono">{{ if .Supplier.PAN }}{{ .Supplier.PAN }}{{ else }}—{{ end }}</td></tr>
+		<tr><td class="muted">Contact Person</td><td>{{ if .Supplier.ContactPerson }}{{ .Supplier.ContactPerson }}{{ else }}—{{ end }}</td></tr>
+		<tr><td class="muted">Address</td><td>{{ if .Supplier.Address }}{{ .Supplier.Address }}{{ else }}—{{ end }}</td></tr>
+		<tr><td class="muted">Status</td><td>
+			{{ if eq .Supplier.Status "active" }}<span class="badge badge--active">Active</span>
+			{{ else }}<span class="badge badge--danger">{{ .Supplier.Status }}</span>{{ end }}
+		</td></tr>
+		{{ if .Supplier.Notes }}<tr><td class="muted">Notes</td><td>{{ .Supplier.Notes }}</td></tr>{{ end }}
+	</table>
+</section>
+
+<section class="panel" style="margin:0">
+	<h2 style="margin-bottom:12px">Quick Actions</h2>
+	<div style="display:flex;flex-direction:column;gap:8px">
+		<a class="button" href="/procurement/orders/new">Create Purchase Order</a>
+		<a class="button button--muted" href="/procurement/grn/new">Receive Stock (GRN)</a>
+		<a class="button button--muted" href="/procurement/payments?supplier_id={{ .Supplier.ID }}">Record Payment</a>
+	</div>
+</section>
+</div>
+
+{{/* Order history */}}
+<section class="panel">
+	<div class="section-head">
+		<h2>Purchase History</h2>
+		<span class="muted">{{ len .Orders }} orders</span>
+	</div>
+	{{ if .Orders }}
+	<table>
+		<thead><tr><th>PO Number</th><th>Status</th><th>Total</th><th>Date</th><th class="actions">Action</th></tr></thead>
+		<tbody>
+			{{ range .Orders }}
+			<tr>
+				<td class="mono">{{ .PONumber }}</td>
+				<td>
+					{{ if eq .Status "completed" }}<span class="badge badge--active">Completed</span>
+					{{ else if eq .Status "approved" }}<span class="badge badge--info">Approved</span>
+					{{ else if eq .Status "pending" }}<span class="badge badge--pending">Pending</span>
+					{{ else if eq .Status "draft" }}<span class="badge badge--draft">Draft</span>
+					{{ else if eq .Status "cancelled" }}<span class="badge badge--danger">Cancelled</span>
+					{{ else }}<span class="badge badge--draft">{{ .Status }}</span>{{ end }}
+				</td>
+				<td>Rs. {{ printf "%.2f" .GrandTotal }}</td>
+				<td class="muted">{{ .CreatedAt.Format "02 Jan 2006" }}</td>
+				<td class="actions"><a class="link-button" href="/procurement/orders/view?id={{ .ID }}">View</a></td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+	{{ else }}
+	<div class="empty" style="padding:24px;text-align:center">No purchase orders for this supplier.</div>
+	{{ end }}
+</section>
+
+{{/* Payment history */}}
+{{ if .Payments }}
+<section class="panel">
+	<h2 style="margin-bottom:12px">Payment History</h2>
+	<table>
+		<thead><tr><th>Payment #</th><th>Method</th><th>Amount</th><th>Reference</th><th>Date</th></tr></thead>
+		<tbody>
+			{{ range .Payments }}
+			<tr>
+				<td class="mono">{{ .PaymentNumber }}</td>
+				<td>{{ .PaymentMethod }}</td>
+				<td><strong>Rs. {{ printf "%.2f" .Amount }}</strong></td>
+				<td class="muted">{{ if .Reference }}{{ .Reference }}{{ else }}—{{ end }}</td>
+				<td class="muted">{{ .CreatedAt.Format "02 Jan 2006" }}</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</section>
+{{ end }}
+{{ end }}

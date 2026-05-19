@@ -1,0 +1,14 @@
+{{ define "title" }}Error {{ .Code }}{{ end }}
+{{ define "content" }}
+<div class="error-page">
+  <div class="error-page-inner">
+    <div class="error-code">{{ .Code }}</div>
+    <h1 class="error-title">{{ .Title }}</h1>
+    <p class="error-msg">{{ .Message }}</p>
+    <div class="error-actions">
+      <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+      <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+    </div>
+  </div>
+</div>
+{{ end }}

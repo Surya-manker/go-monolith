@@ -1,0 +1,126 @@
+{{ define "title" }}Suppliers{{ end }}
+
+{{ define "content" }}
+<section class="page-head">
+	<div>
+		<p class="eyebrow">Procurement</p>
+		<h1>Suppliers</h1>
+		<p class="muted">Manage your supplier profiles, payment terms, credit limits, and outstanding dues.</p>
+	</div>
+	<a class="button button--muted" href="/procurement">← Procurement</a>
+</section>
+
+<section class="panel">
+	<h2 style="margin-bottom:14px">Add Supplier</h2>
+	<form class="grid-form" hx-post="/suppliers" hx-target="#suppliers-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+		<label><span>Name *</span><input type="text" name="name" required maxlength="255" placeholder="Supplier company name"></label>
+		<label><span>Supplier Code</span><input type="text" name="supplier_code" placeholder="Auto-generated if empty"></label>
+		<label><span>GSTIN</span><input type="text" name="gstin" maxlength="20" placeholder="22AAAAA0000A1Z5"></label>
+		<label><span>PAN</span><input type="text" name="pan" maxlength="20" placeholder="AAAAA9999A"></label>
+		<label><span>Contact Person</span><input type="text" name="contact_person" placeholder="Primary contact name"></label>
+		<label><span>Phone</span><input type="tel" name="phone" placeholder="+91 98765 43210"></label>
+		<label><span>Email</span><input type="email" name="email" placeholder="contact@supplier.com"></label>
+		<label><span>Payment Terms (days)</span><input type="number" name="payment_terms" value="30" min="0"></label>
+		<label><span>Credit Limit (Rs.)</span><input type="number" name="credit_limit" step="0.01" min="0" value="0" placeholder="0 = no limit"></label>
+		<label class="wide"><span>Address</span><input type="text" name="address" placeholder="Full business address"></label>
+		<label class="wide"><span>Notes</span><input type="text" name="notes" placeholder="Internal notes"></label>
+		<div><button class="button" type="submit">Add Supplier</button></div>
+	</form>
+</section>
+
+<section class="panel">
+	<div id="suppliers-table">
+		{{ template "suppliers-table" . }}
+	</div>
+</section>
+{{ end }}
+
+{{ define "suppliers-table" }}
+{{ if .Error }}<div class="alert" style="margin-bottom:12px">{{ .Error }}</div>{{ end }}
+
+{{ if .Edit }}
+<div style="margin-bottom:16px;padding:16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border)">
+	<p style="font-weight:600;margin-bottom:12px">Edit Supplier: {{ .Edit.Name }}</p>
+	<form class="grid-form" hx-post="/suppliers/update?id={{ .Edit.ID }}" hx-target="#suppliers-table" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+		<label><span>Name *</span><input type="text" name="name" required value="{{ .Edit.Name }}"></label>
+		<label><span>GSTIN</span><input type="text" name="gstin" value="{{ .Edit.GSTIN }}"></label>
+		<label><span>PAN</span><input type="text" name="pan" value="{{ .Edit.PAN }}"></label>
+		<label><span>Contact Person</span><input type="text" name="contact_person" value="{{ .Edit.ContactPerson }}"></label>
+		<label><span>Phone</span><input type="tel" name="phone" value="{{ .Edit.Phone }}"></label>
+		<label><span>Email</span><input type="email" name="email" value="{{ .Edit.Email }}"></label>
+		<label><span>Payment Terms (days)</span><input type="number" name="payment_terms" value="{{ .Edit.PaymentTerms }}"></label>
+		<label><span>Credit Limit</span><input type="number" name="credit_limit" step="0.01" value="{{ printf "%.2f" .Edit.CreditLimit }}"></label>
+		<label><span>Status</span>
+			<select name="status">
+				<option value="active" {{ if eq .Edit.Status "active" }}selected{{ end }}>Active</option>
+				<option value="inactive" {{ if eq .Edit.Status "inactive" }}selected{{ end }}>Inactive</option>
+				<option value="blacklisted" {{ if eq .Edit.Status "blacklisted" }}selected{{ end }}>Blacklisted</option>
+			</select>
+		</label>
+		<label class="wide"><span>Address</span><input type="text" name="address" value="{{ .Edit.Address }}"></label>
+		<label class="wide"><span>Notes</span><input type="text" name="notes" value="{{ .Edit.Notes }}"></label>
+		<div style="display:flex;gap:8px">
+			<button class="button" type="submit">Update</button>
+			<button class="button button--muted" type="button" hx-get="/suppliers" hx-target="#suppliers-table" hx-swap="innerHTML">Cancel</button>
+		</div>
+	</form>
+</div>
+{{ end }}
+
+{{ if .Suppliers }}
+<table>
+	<thead>
+		<tr>
+			<th>Supplier</th>
+			<th>Code</th>
+			<th>GSTIN</th>
+			<th>Contact</th>
+			<th>Terms</th>
+			<th style="text-align:right">Purchases</th>
+			<th style="text-align:right">Paid</th>
+			<th style="text-align:right">Outstanding</th>
+			<th>Status</th>
+			<th class="actions">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{ range .Suppliers }}
+		<tr>
+			<td>
+				<strong>{{ .Name }}</strong>
+				{{ if .ContactPerson }}<p class="cell-note">{{ .ContactPerson }}</p>{{ end }}
+			</td>
+			<td class="mono">{{ .SupplierCode }}</td>
+			<td class="mono">{{ if .GSTIN }}{{ .GSTIN }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td>{{ if .Phone }}{{ .Phone }}{{ else if .Email }}{{ .Email }}{{ else }}<span class="muted">—</span>{{ end }}</td>
+			<td>{{ .PaymentTerms }}d</td>
+			<td style="text-align:right">Rs. {{ printf "%.0f" .TotalPurchases }}</td>
+			<td style="text-align:right">Rs. {{ printf "%.0f" .TotalPaid }}</td>
+			<td style="text-align:right">
+				{{ if gt .OutstandingDue 0.0 }}
+				<span style="color:#dc2626;font-weight:700">Rs. {{ printf "%.0f" .OutstandingDue }}</span>
+				{{ else }}
+				<span style="color:#059669">Clear</span>
+				{{ end }}
+			</td>
+			<td>
+				{{ if eq .Status "active" }}<span class="badge badge--active">Active</span>
+				{{ else if eq .Status "inactive" }}<span class="badge badge--draft">Inactive</span>
+				{{ else }}<span class="badge badge--danger">{{ .Status }}</span>{{ end }}
+			</td>
+			<td class="actions">
+				<a class="link-button" href="/suppliers/view?id={{ .ID }}">View</a>
+				<button class="link-button" hx-get="/suppliers/edit?id={{ .ID }}" hx-target="#suppliers-table" hx-swap="innerHTML">Edit</button>
+			</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+{{ else }}
+<div class="empty" style="padding:32px;text-align:center">
+	<p style="font-size:32px;margin-bottom:8px">🏭</p>
+	<p style="font-weight:600">No suppliers yet</p>
+	<p class="muted">Add your first supplier above.</p>
+</div>
+{{ end }}
+{{ end }}

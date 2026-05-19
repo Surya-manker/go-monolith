@@ -10,8 +10,6 @@ import (
 	"go-monolith/models"
 )
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 func apiJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -22,8 +20,6 @@ func apiError(w http.ResponseWriter, status int, msg string) {
 	apiJSON(w, status, map[string]string{"error": msg})
 }
 
-// ── Auth info ─────────────────────────────────────────────────────────────────
-
 func (a *App) APIMe(w http.ResponseWriter, r *http.Request) {
 	user := middleware.UserFromContext(r.Context())
 	if user == nil {
@@ -31,32 +27,31 @@ func (a *App) APIMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	apiJSON(w, http.StatusOK, map[string]any{
-		"id":    user.ID,
-		"name":  user.Name,
-		"email": user.Email,
-		"role":  user.Role,
+		"id":          user.ID,
+		"business_id": user.BusinessID,
+		"name":        user.Name,
+		"email":       user.Email,
+		"role":        user.Role,
 	})
 }
 
-// ── Products API ──────────────────────────────────────────────────────────────
-
 func (a *App) APIProducts(w http.ResponseWriter, r *http.Request) {
+	bizID := a.bizID(r)
 	switch r.Method {
 	case http.MethodGet:
-		search := r.URL.Query().Get("search")
-		products, err := a.ProductService.List(search)
+		products, err := a.ProductService.List(r.URL.Query().Get("search"), bizID)
 		if err != nil {
 			apiError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		apiJSON(w, http.StatusOK, map[string]any{"data": products, "count": len(products)})
-
 	case http.MethodPost:
 		p, err := productFromRequest(r)
 		if err != nil {
 			apiError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		p.BusinessID = bizID
 		created, err := a.ProductService.Create(p)
 		if err != nil {
 			apiError(w, http.StatusUnprocessableEntity, err.Error())
@@ -67,6 +62,7 @@ func (a *App) APIProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) APIProduct(w http.ResponseWriter, r *http.Request) {
+	bizID := a.bizID(r)
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		apiError(w, http.StatusBadRequest, "invalid id")
@@ -74,7 +70,7 @@ func (a *App) APIProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		p, err := a.ProductService.Get(id)
+		p, err := a.ProductService.Get(id, bizID)
 		if err != nil {
 			apiError(w, http.StatusNotFound, "product not found")
 			return
@@ -87,14 +83,15 @@ func (a *App) APIProduct(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		p.ID = id
+		p.BusinessID = bizID
 		if err := a.ProductService.Update(p); err != nil {
 			apiError(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
-		updated, _ := a.ProductService.Get(id)
+		updated, _ := a.ProductService.Get(id, bizID)
 		apiJSON(w, http.StatusOK, updated)
 	case http.MethodDelete:
-		if err := a.ProductService.Delete(id); err != nil {
+		if err := a.ProductService.Delete(id, bizID); err != nil {
 			apiError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -102,34 +99,22 @@ func (a *App) APIProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ── Generic module API ────────────────────────────────────────────────────────
-
 func (a *App) APIModule(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		switch r.Method {
 		case http.MethodGet:
-			search := r.URL.Query().Get("search")
-			_, result, err := a.ModuleService.ListPaged(key, 1, 100, search, "id", "desc")
+			_, result, err := a.moduleService(r).ListPaged(key, 1, 100, r.URL.Query().Get("search"), "id", "desc", bizID)
 			if err != nil {
 				apiError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			apiJSON(w, http.StatusOK, map[string]any{
-				"data":  result.Records,
-				"total": result.Total,
-				"page":  result.Page,
+				"data": result.Records, "total": result.Total, "page": result.Page,
 			})
 		case http.MethodPost:
-			_ = r.ParseForm()
-			values := map[string]string{}
-			for k, v := range r.Form {
-				values[k] = strings.TrimSpace(v[0])
-			}
-			// Also support JSON body
-			if r.Header.Get("Content-Type") == "application/json" {
-				json.NewDecoder(r.Body).Decode(&values)
-			}
-			if err := a.ModuleService.Create(key, values); err != nil {
+			values := parseAPIValues(r)
+			if err := a.moduleService(r).Create(key, values, bizID); err != nil {
 				apiError(w, http.StatusUnprocessableEntity, err.Error())
 				return
 			}
@@ -140,6 +125,7 @@ func (a *App) APIModule(key string) http.HandlerFunc {
 
 func (a *App) APIModuleRecord(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bizID := a.bizID(r)
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			apiError(w, http.StatusBadRequest, "invalid id")
@@ -147,30 +133,22 @@ func (a *App) APIModuleRecord(key string) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			_, rec, err := a.ModuleService.Get(key, id)
+			_, rec, err := a.moduleService(r).Get(key, id, bizID)
 			if err != nil {
 				apiError(w, http.StatusNotFound, "not found")
 				return
 			}
 			apiJSON(w, http.StatusOK, rec)
 		case http.MethodPut:
-			values := map[string]string{}
-			if r.Header.Get("Content-Type") == "application/json" {
-				json.NewDecoder(r.Body).Decode(&values)
-			} else {
-				_ = r.ParseForm()
-				for k, v := range r.Form {
-					values[k] = strings.TrimSpace(v[0])
-				}
-			}
-			if err := a.ModuleService.Update(key, id, values); err != nil {
+			values := parseAPIValues(r)
+			if err := a.moduleService(r).Update(key, id, values, bizID); err != nil {
 				apiError(w, http.StatusUnprocessableEntity, err.Error())
 				return
 			}
-			_, rec, _ := a.ModuleService.Get(key, id)
+			_, rec, _ := a.moduleService(r).Get(key, id, bizID)
 			apiJSON(w, http.StatusOK, rec)
 		case http.MethodDelete:
-			if err := a.ModuleService.Delete(key, id); err != nil {
+			if err := a.moduleService(r).Delete(key, id, bizID); err != nil {
 				apiError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
@@ -179,57 +157,53 @@ func (a *App) APIModuleRecord(key string) http.HandlerFunc {
 	}
 }
 
-// ── Dashboard stats API ───────────────────────────────────────────────────────
-
 func (a *App) APIStats(w http.ResponseWriter, r *http.Request) {
-	counts, err := a.ModuleService.Counts()
+	bizID := a.bizID(r)
+	counts, err := a.moduleService(r).Counts(bizID)
 	if err != nil {
 		apiError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	totals, err := a.ModuleService.Totals()
+	totals, err := a.moduleService(r).Totals(bizID)
 	if err != nil {
 		apiError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	productCount, _ := a.ProductService.Count()
-	lowStock, _ := a.ProductService.LowStockCount()
-	pending, _ := a.ModuleService.PendingInvoicesTotal()
+	productCount, _ := a.ProductService.Count(bizID)
+	lowStock, _ := a.ProductService.LowStockCount(bizID)
+	pending, _ := a.moduleService(r).PendingInvoicesTotal(bizID)
 
 	apiJSON(w, http.StatusOK, map[string]any{
-		"products":             productCount,
-		"low_stock":            lowStock,
-		"modules":              counts,
-		"invoice_total":        totals["invoice_total"],
-		"purchase_total":       totals["po_total"],
+		"products":              productCount,
+		"low_stock":             lowStock,
+		"modules":               counts,
+		"invoice_total":         totals["invoice_total"],
+		"purchase_total":        totals["po_total"],
 		"pending_invoice_total": pending,
 	})
 }
 
-// ── Search API ────────────────────────────────────────────────────────────────
-
 func (a *App) APISearch(w http.ResponseWriter, r *http.Request) {
+	bizID := a.bizID(r)
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if len(q) < 2 {
 		apiJSON(w, http.StatusOK, map[string]any{"results": []any{}, "query": q})
 		return
 	}
-
 	type APIResult struct {
-		Module string         `json:"module"`
-		Path   string         `json:"path"`
-		ID     string         `json:"id"`
-		Title  string         `json:"title"`
-		Record models.Record  `json:"record"`
+		Module string        `json:"module"`
+		Path   string        `json:"path"`
+		ID     string        `json:"id"`
+		Title  string        `json:"title"`
+		Record models.Record `json:"record"`
 	}
-
 	var results []APIResult
 	for _, key := range []string{"customers", "invoices", "vendors", "categories", "payments"} {
-		cfg, ok := a.ModuleService.ConfigOnly(key)
+		cfg, ok := a.moduleService(r).ConfigOnly(key)
 		if !ok {
 			continue
 		}
-		_, result, err := a.ModuleService.ListPaged(key, 1, 10, q, "", "")
+		_, result, err := a.moduleService(r).ListPaged(key, 1, 10, q, "", "", bizID)
 		if err != nil {
 			continue
 		}
@@ -239,14 +213,25 @@ func (a *App) APISearch(w http.ResponseWriter, r *http.Request) {
 				title = rec["number"]
 			}
 			results = append(results, APIResult{
-				Module: cfg.Title,
-				Path:   cfg.Path,
-				ID:     rec["id"],
-				Title:  title,
-				Record: rec,
+				Module: cfg.Title, Path: cfg.Path,
+				ID: rec["id"], Title: title, Record: rec,
 			})
 		}
 	}
-
 	apiJSON(w, http.StatusOK, map[string]any{"results": results, "query": q, "count": len(results)})
+}
+
+func parseAPIValues(r *http.Request) map[string]string {
+	values := map[string]string{}
+	if r.Header.Get("Content-Type") == "application/json" {
+		json.NewDecoder(r.Body).Decode(&values)
+		return values
+	}
+	_ = r.ParseForm()
+	for k, v := range r.Form {
+		if len(v) > 0 {
+			values[k] = strings.TrimSpace(v[0])
+		}
+	}
+	return values
 }
